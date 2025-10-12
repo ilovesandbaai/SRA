@@ -434,6 +434,12 @@ function copyObjectionText(){
     alert('Objection text copied to clipboard.');
   });
 }
+// Utility: remove HTML tags for plaintext email / clipboard
+function stripHtml(html){
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html || '';
+  return tmp.textContent || tmp.innerText || '';
+}  
 function nextStep(){
   if(state.step===1){
     state.name = document.getElementById('name').value.trim();
