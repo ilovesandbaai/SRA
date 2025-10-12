@@ -207,20 +207,48 @@ const state = {
 };
 
 function scrollToRevoke(){
+  // If user hasn't entered name yet, show same required notice as Next
+  const currentName = (document.getElementById('name') && document.getElementById('name').value || '').trim();
+  if(!currentName){
+    alert('Please enter your full name (required).');
+    // focus the name field so user can enter it
+    const nameEl = document.getElementById('name');
+    if(nameEl) nameEl.focus();
+    return;
+  }
+
+  // Open step 2 and expand the category containing the revoke checkbox
   state.step = 2;
   renderStep();
+
   setTimeout(() => {
     const catId = 'cat-1';
     const content = document.getElementById(catId);
-    const head = content.previousElementSibling;
-    content.classList.add('open');
-    head.classList.add('open');
-    
-    const revokeCheckbox = document.getElementById('cb-prob_26');
+    if(content){
+      const head = content.previousElementSibling;
+      content.classList.add('open');
+      if(head) head.classList.add('open');
+    }
+
+    // Ensure revoke checkbox is selected (and recorded in state) — do NOT toggle it off
+    const revokeId = 'prob_26';
+    const revokeCheckbox = document.getElementById('cb-' + revokeId);
     if(revokeCheckbox){
-      revokeCheckbox.scrollIntoView({behavior:'smooth',block:'center'});
+      if(!state.selected.has(revokeId)){
+        state.selected.add(revokeId);
+        state.hasRevokedConsent = true;
+        revokeCheckbox.checked = true;
+        updatePreview();
+      } else {
+        // already selected — ensure checkbox UI matches
+        revokeCheckbox.checked = true;
+        state.hasRevokedConsent = true;
+      }
+      // scroll to view and lightly pulse
+      revokeCheckbox.scrollIntoView({behavior:'smooth', block:'center'});
       setTimeout(() => {
-        revokeCheckbox.parentElement.style.animation = 'pulse 1s ease-in-out 3';
+        const label = revokeCheckbox.parentElement;
+        if(label) label.style.animation = 'pulse 1s ease-in-out 3';
       }, 300);
     }
   }, 300);
