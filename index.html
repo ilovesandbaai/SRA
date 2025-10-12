@@ -624,46 +624,56 @@ function generatePlainTextEmail(){
   return text;
 }
 
-async function downloadPDF(){
+async function downloadPDF() {
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({unit:'mm',format:'a4'});
+  const doc = new jsPDF({ unit: "mm", format: "a4" });
   const margin = 14;
   const lineHeight = 6;
   const pageWidth = 210;
-  const maxWidth = pageWidth - (margin * 2);
+  const maxWidth = pageWidth - margin * 2;
   let y = margin;
 
-  function checkPageBreak(neededSpace){
-    if(y + neededSpace > 270){
+  function checkPageBreak(neededSpace) {
+    if (y + neededSpace > 270) {
       doc.addPage();
       y = margin;
     }
   }
 
-  // We will generate the full plain-text email (already includes header, objections, legal grounds, personal statement and the CONFIRM note)
-  const plainText = generatePlainTextEmail();
-  const lines = doc.splitTextToSize(plainText, maxWidth);
+  // Get the full plain-text email body (already formatted)
+  const verifyNote =
+    "\n\nPlease confirm in writing that my ‘No’ consent or revocation has been faithfully recorded in the official municipal register.";
+  const raw = generatePlainTextEmail() + verifyNote;
 
-  doc.setFontSize(10);
-  doc.setFont(undefined, 'normal');
+  // Clean and format for better readability
+  const formatted = raw
+    .replace(/\n{2,}/g, "\n\n")
+    .replace(/-{10,}/g, "----------------------------------------")
+    .replace(/={10,}/g, "========================================");
 
-  lines.forEach(line => {
+  const lines = doc.splitTextToSize(formatted, maxWidth);
+
+  doc.setFontSize(11);
+  doc.setFont("times", "normal");
+  doc.setTextColor(0);
+
+  lines.forEach((line) => {
     checkPageBreak(lineHeight);
     doc.text(line, margin, y);
     y += lineHeight;
   });
 
-  // Add page numbers
+  // Page numbers
+  const pageCount = doc.internal.getNumberOfPages();
   doc.setFontSize(8);
   doc.setTextColor(100);
-  const pageCount = doc.internal.getNumberOfPages();
-  for(let i=1; i<=pageCount; i++){
+  for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
-    doc.text(`Page ${i} of ${pageCount}`, pageWidth - margin - 20, 285);
+    doc.text(`Page ${i} of ${pageCount}`, pageWidth - margin - 22, 285);
   }
 
-  // Save file using a safe filename
-  const filenameSafe = (state.erf || state.name || 'submission').replace(/[^\w\-_. ]+/g,'_');
+  const filenameSafe =
+    (state.erf || state.name || "submission").replace(/[^\w\-_. ]+/g, "_");
   doc.save(`Sandbaai_SRA_Objection_${filenameSafe}.pdf`);
 }
 
