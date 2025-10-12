@@ -85,42 +85,44 @@
         <div class="step-nav" id="stepNav"></div>
       </div>
 
-      <!-- Step 1: Identity -->
+<!-- Step 1: Identity -->
       <div id="step-1" class="step">
         <div class="row">
           <div style="flex:2">
             <label for="name" class="required">Full name</label>
             <input id="name" placeholder="Your full name (owner or representative)" required />
+            <div class="note" style="margin-top:6px">Enter your full name <strong>exactly</strong> as it appears on your municipal rates and taxes.</div>
           </div>
           <div style="flex:1">
-            <label for="idNumber">ID Number (optional)</label>
+            <label for="idNumber">ID Number <span class="muted" style="font-weight:400">(optional)</span></label>
             <input id="idNumber" placeholder="e.g., 8001015009087" />
           </div>
         </div>
-        <div class="note" style="margin-top:4px">If ID number is left blank, you'll need to add it manually when submitting to the municipality.</div>
-          <div>
-            <label for="address">Property address (optional)</label>
-            <input id="address" placeholder="Street, Erf or complex name" />
-          </div>
-          <div>
-            <label for="erf">Erf / Stand number(s)(optional)</label>
-            <input id="erf" placeholder="e.g., Erf 123, Erf 456" />
-          </div>
+
+        <div class="note" style="margin-top:10px">If ID number is left blank, you'll need to add it manually when submitting to the municipality.</div>
+
+        <div style="margin-top:10px">
+          <label for="address">Property address <span class="muted" style="font-weight:400">(optional)</span></label>
+          <input id="address" placeholder="Street, Erf or complex name" />
         </div>
-        
-        <div class="note" style="margin-top:4px">If ID number is left blank, you'll need to add it manually when submitting to the municipality.</div>
-        
-        <div class="row" style="margin-top:8px">
+
+        <div style="margin-top:10px">
+          <label for="erf">Erf / Stand number(s) <span class="muted" style="font-weight:400">(optional)</span></label>
+          <input id="erf" placeholder="e.g., Erf 123, Erf 456" />
+          <div class="note" style="margin-top:6px">You may list multiple Erfs separated by commas.</div>
+        </div>
+
+        <div class="row" style="margin-top:12px">
           <div>
-            <label for="email">Email (optional)</label>
+            <label for="email">Email <span class="muted" style="font-weight:400">(optional)</span></label>
             <input id="email" type="email" placeholder="you@example.com" />
           </div>
           <div>
-            <label for="phone">Phone (optional)</label>
+            <label for="phone">Phone <span class="muted" style="font-weight:400">(optional)</span></label>
             <input id="phone" placeholder="+27 ..." />
           </div>
         </div>
-        
+
         <div style="margin-top:10px" class="flex-between">
           <button class="btn" onclick="nextStep()">Next</button>
           <button class="btn alt" onclick="saveDraft()">Save draft</button>
