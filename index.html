@@ -667,19 +667,31 @@ async function downloadPDF(){
   doc.save(`Sandbaai_SRA_Objection_${filenameSafe}.pdf`);
 }
 
-function openEmail(){
+function openEmail() {
   const toEmails = 'CFO@overstrand.gov.za, dlouw@overstrand.gov.za';
   const ccEmails = 'mm@overstrand.gov.za, mayor@overstrand.gov.za';
   const bccEmails = 'ilovesandbaai@gmail.com';
   const subject = encodeURIComponent('Formal Objection – Sandbaai SRA Application');
-  const verifyNote = "\n\nPlease confirm in writing that my ‘No’ consent or revocation has been faithfully recorded in the official municipal register.";
-  const body = encodeURIComponent(stripHtml(generateFinalObjectionHTML()) + verifyNote);
-  
+
+  // Get the formatted text with extra spacing
+  const verifyNote =
+    "\n\nPlease confirm in writing that my ‘No’ consent or revocation has been faithfully recorded in the official municipal register.";
+  const raw = generatePlainTextEmail() + verifyNote;
+
+  // Add readable spacing: extra blank lines between sections
+  const formatted = raw
+    .replace(/\n{2,}/g, "\n\n")
+    .replace(/-{10,}/g, "----------------------------------------")
+    .replace(/={10,}/g, "========================================");
+
+  // Ensure mailto line breaks render properly (use %0A for newline)
+  const body = encodeURIComponent(formatted).replace(/%0A/g, "%0D%0A");
+
   const mailto = `mailto:${toEmails}?cc=${ccEmails}&bcc=${bccEmails}&subject=${subject}&body=${body}`;
-  
-  const tempLink = document.createElement('a');
+
+  const tempLink = document.createElement("a");
   tempLink.href = mailto;
-  tempLink.style.display = 'none';
+  tempLink.style.display = "none";
   document.body.appendChild(tempLink);
   tempLink.click();
   document.body.removeChild(tempLink);
