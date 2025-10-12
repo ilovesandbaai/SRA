@@ -3,42 +3,56 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Sandbaai SRA Objection Builder</title>
+<title>Sandbaai SRA Objection Assistant</title>
 <meta name="description" content="Generate a formal objection to the Sandbaai SRA application – simple, private, and legally structured." />
 <style>
   :root{--accent:#125b7a;--muted:#666;--bg:#f7fafc;font-family:Inter,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial;}
   body{margin:0;background:var(--bg);color:#0b1720;line-height:1.45}
   .container{max-width:980px;margin:20px auto;padding:18px}
-  header{display:flex;align-items:center;gap:12px}
+  header{display:flex;align-items:center;gap:12px;margin-bottom:14px}
   h1{margin:0;font-size:1.35rem}
-  p.lead{margin:6px 0 18px;color:var(--muted)}
+  p.lead{margin:6px 0 0;color:var(--muted)}
+  .revoke-banner{background:#fff3cd;border:2px solid #ffc107;padding:12px;border-radius:8px;margin-bottom:14px;text-align:center}
+  .revoke-banner a{color:#125b7a;font-weight:700;text-decoration:none}
+  .revoke-banner a:hover{text-decoration:underline}
   .card{background:#fff;padding:14px;border-radius:10px;box-shadow:0 4px 18px rgba(11,23,32,0.06);margin-bottom:14px}
   label{display:block;font-weight:600;margin-bottom:6px}
-  input[type="text"], input[type="email"], textarea, select{width:100%;padding:10px;border-radius:8px;border:1px solid #e6edf2}
+  .required:after{content:" *";color:#dc3545}
+  input[type="text"], input[type="email"], textarea, select{width:100%;padding:10px;border-radius:8px;border:1px solid #e6edf2;box-sizing:border-box}
   .row{display:flex;gap:10px}
   .row > *{flex:1}
+  .note{font-size:0.85rem;color:var(--muted);margin-top:4px;font-style:italic}
   .accordion{border-radius:8px;overflow:hidden;border:1px solid #e6edf2;margin-bottom:8px}
   .section-head{display:flex;justify-content:space-between;align-items:center;padding:10px;background:#fafcff;cursor:pointer;user-select:none}
   .section-head:hover{background:#f0f7ff}
   .section-head h3{margin:0;font-size:1rem}
-  .section-head .toggle{transition:transform 0.2s}
+  .section-head .toggle{transition:transform 0.2s;font-size:0.9rem}
   .section-head.open .toggle{transform:rotate(180deg)}
   .section-content{padding:0;max-height:0;overflow:hidden;transition:max-height 0.3s ease-out}
-  .section-content.open{max-height:2000px;padding:10px;border-top:1px solid #eef6fb}
+  .section-content.open{max-height:3000px;padding:10px;border-top:1px solid #eef6fb}
   .checkbox{display:flex;align-items:flex-start;gap:10px;padding:8px;border-radius:6px;margin-bottom:6px}
   .checkbox:hover{background:#fafcff}
-  .checkbox input{margin-top:5px;cursor:pointer}
+  .checkbox input{margin-top:5px;cursor:pointer;min-width:16px}
+  .checkbox.revoke-consent{background:#fff3cd;border:2px solid #ffc107}
   .muted{color:var(--muted);font-size:0.9rem}
-  .flex-between{display:flex;justify-content:space-between;align-items:center}
+  .flex-between{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
   .btn{background:var(--accent);color:#fff;padding:10px 14px;border-radius:8px;border:0;cursor:pointer;font-size:0.95rem}
   .btn:hover{opacity:0.9}
   .btn.alt{background:#fff;color:var(--accent);border:1px solid var(--accent)}
   .btn.alt:hover{background:#f0f7ff}
+  .btn:disabled{opacity:0.5;cursor:not-allowed}
+  .step-nav{display:flex;justify-content:center;gap:8px;margin-bottom:12px}
+  .step-indicator{width:12px;height:12px;border-radius:50%;background:#e6edf2;cursor:pointer}
+  .step-indicator.active{background:var(--accent)}
+  .step-indicator.completed{background:#28a745}
   .progress{height:10px;background:#e6edf2;border-radius:20px;overflow:hidden}
   .progress > i{display:block;height:100%;background:var(--accent);width:0%;transition:width 0.3s}
   .preview{max-height:420px;overflow:auto;padding:10px;background:#fff;border-radius:8px;border:1px solid #e6edf2}
-  .legal-header{font-weight:700;margin-top:12px;margin-bottom:6px;color:#125b7a}
+  .legal-header{font-weight:700;margin-top:12px;margin-bottom:6px;color:#125b7a;font-size:1.05rem}
   .citation{font-size:0.85rem;color:var(--muted);margin-top:4px;font-style:italic}
+  .copy-notice{background:#e7f3ff;border:1px solid #125b7a;padding:10px;border-radius:6px;margin-bottom:10px;font-size:0.9rem}
+  .revoke-notice{background:#fff3cd;border:2px solid #ffc107;padding:14px;border-radius:8px;margin-bottom:14px;font-weight:600;text-align:center}
+  .email-preview{background:#f8f9fa;padding:12px;border-radius:6px;border:1px solid #dee2e6;margin-top:10px;font-family:monospace;font-size:0.85rem;white-space:pre-wrap}
   @media (max-width:700px){
     .row{flex-direction:column}
     header{flex-direction:column;text-align:center}
@@ -48,41 +62,72 @@
 </head>
 <body>
   <div class="container">
+    <div class="revoke-banner">
+      <strong>Important:</strong> Want to revoke your consent? <a href="#revoke" onclick="scrollToRevoke()">Click here to formally withdraw your vote</a>
+    </div>
+
     <header>
       <svg width="48" height="48" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="6" fill="#125b7a"/><path d="M7 12h10M7 8h10M7 16h6" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/></svg>
       <div>
-        <h1>Sandbaai SRA – Objection Builder</h1>
-        <p class="lead">Friendly form that turns your selections and personal input into a legally structured objection letter. No legal knowledge required.</p>
+        <h1>Sandbaai SRA Objection Assistant</h1>
+        <p class="lead">Generate a formal objection to the Sandbaai SRA application – simple, private, and legally structured.</p>
       </div>
     </header>
 
     <div id="app" class="card">
       <div style="margin-bottom:12px">
-        <div class="flex-between"><div><strong id="stepTitle">Step 1 – Your Property</strong></div><div class="muted" id="stepCounter">Step 1 of 4</div></div>
+        <div class="flex-between">
+          <div><strong id="stepTitle">Step 1 – Your Information</strong></div>
+          <div class="muted" id="stepCounter">Step 1 of 4</div>
+        </div>
         <div class="progress" aria-hidden="true"><i id="progressBar"></i></div>
+        <div class="step-nav" id="stepNav"></div>
       </div>
 
+      <!-- Step 1: Identity -->
       <div id="step-1" class="step">
-        <label for="name">Full name</label>
-        <input id="name" placeholder="Your full name (owner or representative)" />
+        <label for="name" class="required">Full name</label>
+        <input id="name" placeholder="Your full name (owner or representative)" required />
+        
         <div class="row" style="margin-top:8px">
-          <div><label for="address">Property address</label><input id="address" placeholder="Street, Erf or complex name" /></div>
-          <div><label for="erf">Erf / Stand number</label><input id="erf" placeholder="e.g., Erf 123" /></div>
+          <div>
+            <label for="address">Property address (optional)</label>
+            <input id="address" placeholder="Street, Erf or complex name" />
+          </div>
+          <div>
+            <label for="erf">Erf / Stand number (optional)</label>
+            <input id="erf" placeholder="e.g., Erf 123" />
+          </div>
         </div>
+        
+        <div style="margin-top:8px">
+          <label for="idNumber">ID Number (optional)</label>
+          <input id="idNumber" placeholder="e.g., 8001015009087" />
+          <div class="note">If left blank, you'll need to add your ID number manually when submitting to the municipality.</div>
+        </div>
+        
         <div class="row" style="margin-top:8px">
-          <div><label for="email">Email (optional for delivery)</label><input id="email" type="email" placeholder="you@example.com" /></div>
-          <div><label for="phone">Phone (optional)</label><input id="phone" placeholder="+27 ..." /></div>
+          <div>
+            <label for="email">Email (optional)</label>
+            <input id="email" type="email" placeholder="you@example.com" />
+          </div>
+          <div>
+            <label for="phone">Phone (optional)</label>
+            <input id="phone" placeholder="+27 ..." />
+          </div>
         </div>
+        
         <div style="margin-top:10px" class="flex-between">
           <button class="btn" onclick="nextStep()">Next</button>
-          <button class="btn alt" onclick="saveDraft()">Save draft (browser)</button>
+          <button class="btn alt" onclick="saveDraft()">Save draft</button>
         </div>
       </div>
 
+      <!-- Step 2: Selection -->
       <div id="step-2" class="step" style="display:none">
         <div style="display:flex;gap:12px;flex-wrap:wrap">
           <div style="flex:1;min-width:280px">
-            <label>Choose the issues that apply to you</label>
+            <label>Select your objections</label>
             <div id="categories"></div>
           </div>
           <div style="width:44%;min-width:240px">
@@ -96,6 +141,7 @@
         </div>
       </div>
 
+      <!-- Step 3: Personal story -->
       <div id="step-3" class="step" style="display:none">
         <label for="personal">Personal statement (optional)</label>
         <textarea id="personal" rows="6" placeholder="Describe how this affects you, dates, witnesses, incidents, and evidence (optional)"></textarea>
@@ -106,27 +152,34 @@
         </div>
       </div>
 
+      <!-- Step 4: Review & Generate -->
       <div id="step-4" class="step" style="display:none">
-        <label>Review the objection</label>
+        <div id="revokeNoticeContainer"></div>
+        
+        <div class="copy-notice">
+          <strong>Tip:</strong> You can copy the text below and paste it directly into your email client if you prefer.
+        </div>
+        
+        <label>Review your objection</label>
         <div id="finalPreview" class="preview"></div>
+        
         <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn" onclick="downloadPDF()">Download PDF</button>
           <button class="btn" onclick="openEmail()">Open email draft</button>
-          <button class="btn alt" onclick="prevStep()">Edit selections</button>
+          <button class="btn alt" onclick="prevStep()">Edit</button>
         </div>
       </div>
     </div>
 
     <footer>
-      <div class="muted">This tool stores nothing on servers. All data is processed in your browser. Use responsibly.</div>
+      <div class="muted">This form does not store or share your data.</div>
     </footer>
   </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script>
-// Data converted from JSON structure
-const objectionData = [{"category":"Financial Waste & Mismanagement","questions":[{"id":"fina_0","statement":"I cannot afford to pay an additional tariff, especially not  for services I already pay for.","legalCategory":"IV. FINANCIAL FRAUD & REDUNDANCY (MFMA & Procurement)","legalGround":"The SRA levy constitutes an undue financial burden and fails to make adequate provision for vulnerable groups.","legalCitation":"MSA s26 & s153: Obligation to ensure a sustainable standard of living. MPRA s17(b): Requires regulation of criteria for granting rebates."},{"id":"fina_1","statement":"I object to paying another tariff for services the municipality is already required to provide with my rates and taxes.","legalCategory":"IV. FINANCIAL FRAUD & REDUNDANCY (MFMA & Procurement)","legalGround":"The SRA levy is unjustified as it funds services the Municipality is already constitutionally and statutorily obliged to provide, or is redundant to existing private services. This violates the 'improvement' requirement.","legalCitation":"Municipal Property Rates Act (MPRA) s22(2)(a)(ii): Requires proposed improvement or upgrading. Constitution s152 & s153: Basic municipal service delivery obligations."},{"id":"fina_2","statement":"I object to the financial non-viability of the Business Plan, especially after the 20% loss of income from H&A's exclusion.","legalCategory":"IV. FINANCIAL FRAUD & REDUNDANCY (MFMA & Procurement)","legalGround":"The business plan is no longer sustainable, financially viable, or credible, and must be rejected on financial grounds.","legalCitation":"Municipal Property Rates Act (MPRA) s22(2)(a)(ii): Requires proposed improvement or upgrading. Constitution s152 & s153: Basic municipal service delivery obligations."},{"id":"fina_3","statement":"I object to the inflated costs in the budget (e.g., R92,000 for R3,000 cameras) and lack of value for money.","legalCategory":"IV. FINANCIAL FRAUD & REDUNDANCY (MFMA & Procurement)","legalGround":"The budget demonstrates gross financial negligence and a failure to secure value for money as required by national financial law.","legalCitation":"Municipal Finance Management Act (MFMA) Principles: Requires good financial management and value for money."},{"id":"fina_4","statement":"I object to the SRA imposing a mandatory tariff on pensioners.","legalCategory":"IV. FINANCIAL FRAUD & REDUNDANCY (MFMA & Procurement)","legalGround":"The SRA levy constitutes an undue financial burden and fails to make adequate provision for vulnerable groups.","legalCitation":"MSA s26 & s153: Obligation to ensure a sustainable standard of living. MPRA s17(b): Requires regulation of criteria for granting rebates."},{"id":"fina_5","statement":"I object to the use of tariff money to reimburse the Steering Committee's costs without full disclosure of expenditure.","legalCategory":"IV. FINANCIAL FRAUD & REDUNDANCY (MFMA & Procurement)","legalGround":"The lack of transparency regarding establishment costs creates an unacceptable risk of corruption and undisclosed conflicts of interest.","legalCitation":"Overstrand SRA By-Law 4.2: Allows reimbursement but must follow MFMA principles of transparency."},{"id":"fina_6","statement":"The budget was manipulated to look viable (e.g., admitted to \"fiddling with numbers\" in internal documents).","legalCategory":"IV. FINANCIAL FRAUD & REDUNDANCY (MFMA & Procurement)","legalGround":"The admission of budget manipulation constitutes prima facie evidence of fraudulent misrepresentation and a breach of the CFO's fiduciary oversight duties.","legalCitation":"MFMA s81(1)(b): Financial misconduct. MSA s22(1)(b): Requires a financially viable plan."},{"id":"fina_7","statement":"The same objections that H&E used apply to the gated community I live in.","legalCategory":"IV. FINANCIAL FRAUD & REDUNDANCY (MFMA & Procurement)","legalGround":"The imposition of a mandatory tariff for services already paid for by private levies is unjustified.","legalCitation":"MPRA s22(2)(a)(ii): The SRA must provide a genuine improvement."},{"id":"fina_8","statement":"The SRA budget includes an excessive R160,000 salary for a manager who has no relevant experience.","legalCategory":"IV. FINANCIAL FRAUD & REDUNDANCY (MFMA & Procurement)","legalGround":"The excessive cost for unproven capacity fails the requirement for cost-effective service delivery.","legalCitation":"Constitution s217. MFMA Principles: Requires a high standard of managerial capability."},{"id":"fina_9","statement":"The SRA budget presumes that particular vendors will get the contract without tender (e.g., for radio signal cameras).","legalCategory":"IV. FINANCIAL FRAUD & REDUNDANCY (MFMA & Procurement)","legalGround":"The clear bias towards specific technology/vendors violates the constitutional and statutory requirements for public procurement.","legalCitation":"Constitution s217: Public procurement must be fair, equitable, transparent, competitive, and cost-effective. MFMA s112 & s118."},{"id":"fina_10","statement":"The SRA cannot guarantee the amount of the tariff or how much it will increase.","legalCategory":"IV. FINANCIAL FRAUD & REDUNDANCY (MFMA & Procurement)","legalGround":"The lack of a guaranteed tariff ceiling or controlled escalation rate undermines the financial viability assessment and constitutes an open-ended liability for ratepayers.","legalCitation":"MFMA s17(3): Requires a sustainable budget and projections."},{"id":"fina_11","statement":"The SRA plan for camera installs is unnecessary because Sandbaai already has an excellent security system.","legalCategory":"IV. FINANCIAL FRAUD & REDUNDANCY (MFMA & Procurement)","legalGround":"The proposal fails the statutory test for \"improvement or upgrading\" as the proposed service is redundant and inferior to existing private services.","legalCitation":"MPRA s22(2)(a)(ii): Requires \"proposed improvement or upgrading of the area.\""},{"id":"fina_12","statement":"The SRA's latest business plan shows a zeroing out of expenses to balance the budget, signifying previous budget bloat and a serious change in services.","legalCategory":"IV. FINANCIAL FRAUD & REDUNDANCY (MFMA & Procurement)","legalGround":"Budget Manipulation is evident, which constitutes potential fraudulent misrepresentation and a material change requiring re-consultation.","legalCitation":"MFMA s81(1)(b): Financial misconduct. By-law 6.2: Requires new process for material amendments."}]},{"category":"Problems with My Vote & Consent","questions":[{"id":"prob_13","statement":"I believe my vote was obtained through unethical means (e.g., financial inducement, pressure, or misinformation).","legalCategory":"II. IRREPARABLE FAILURES OF THE CONSENT PROCESS (MSA & PAJA)","legalGround":"Consent obtained through financial inducement (vote-buying) or coercion is unlawful and invalidates the consent process.","legalCitation":"Common Law & MSA s22 Principles: Requires genuine, uncoerced consent; fraud vitiates consent."},{"id":"prob_14","statement":"I know of or witnessed vote-buying, where people were paid or offered vouchers to secure votes.","legalCategory":"II. IRREPARABLE FAILURES OF THE CONSENT PROCESS (MSA & PAJA)","legalGround":"Consent obtained through financial inducement (vote-buying) or coercion is unlawful and invalidates the consent process.","legalCitation":"Common Law & MSA s22 Principles: Requires genuine, uncoerced consent; fraud vitiates consent."},{"id":"prob_15","statement":"I object to 50%+1 consent being considered sufficient to enact an additional tariff on all property owners.","legalCategory":"II. IRREPARABLE FAILURES OF THE CONSENT PROCESS (MSA & PAJA)","legalGround":"The imposition of a mandatory additional tax on the minority without their consent, even if legally compliant, is considered procedurally unjust and fundamentally unfair to the community's right to equitable treatment.","legalCitation":"Municipal Property Rates Act (MPRA) s22(2)(b): Requires the consent of the majority. Constitution s33: Fair administrative action."},{"id":"prob_16","statement":"Property owners are not provided with verification that their  'No' votes were faithfully recorded.","legalCategory":"II. IRREPARABLE FAILURES OF THE CONSENT PROCESS (MSA & PAJA)","legalGround":"The lack of a secure, independent audit mechanism for dissent and consent makes the final result unverifiable and susceptible to fraud.","legalCitation":"MSA s22(2)(b): Requires the Municipality to obtain the consent of the majority."},{"id":"prob_17","statement":"Since the SRA was given the information used to verify consents, there is potential for fraud (conflict of interest).","legalCategory":"II. IRREPARABLE FAILURES OF THE CONSENT PROCESS (MSA & PAJA)","legalGround":"The dual role of the Steering Committee (applicant and data controller/verifier) is an inherent conflict of interest that compromises the integrity of the voting process.","legalCitation":"Constitutional s195: Principle of accountability and independence."},{"id":"prob_18","statement":"Survey Monkey and Google forms are susceptible to fraud and the SRA had a list of all property owners' data.","legalCategory":"II. IRREPARABLE FAILURES OF THE CONSENT PROCESS (MSA & PAJA)","legalGround":"The use of unsecured online mechanisms, coupled with access to property owners' data, creates an unacceptable risk of fraud and identity manipulation.","legalCitation":"PAJA s6: An administrative action based on an unverifiable and fraud-susceptible process is unlawful and irrational."},{"id":"prob_19","statement":"The SRA misled people on the board election process, stating the they may be appointing themselves and discouraging candidates.","legalCategory":"II. IRREPARABLE FAILURES OF THE CONSENT PROCESS (MSA & PAJA)","legalGround":"The failure to follow a fair, transparent, and equitable process for director elections constitutes a governance failure and breach of public trust.","legalCitation":"PAJA s3: Mandates procedurally fair administrative action. Companies Act (NPC Governance)."},{"id":"prob_20","statement":"The Urban Perception Survey totals were changed, or participants were forced to give inaccurate responses.","legalCategory":"II. IRREPARABLE FAILURES OF THE CONSENT PROCESS (MSA & PAJA)","legalGround":"The documented manipulation of public survey data constitutes fraudulent misrepresentation to the Municipality regarding the level of public support.","legalCitation":"MFMA s81(1)(b): Financial misconduct/fraudulent reporting. PAJA s6: Decision based on manipulated data is irrational and unlawful."},{"id":"prob_21","statement":"The voting forms were invalid because they did not include an option to formally object, only Yes/No.","legalCategory":"II. IRREPARABLE FAILURES OF THE CONSENT PROCESS (MSA & PAJA)","legalGround":"The omission of a formal objection option violates procedural fairness and misrepresents the ratepayer's right to register dissent.","legalCitation":"PAJA s3: Mandates procedurally fair administrative action."},{"id":"prob_22","statement":"The voting process was flawed (no ID verification, no audit trail, forms were left exposed at Sandbaai Saal).","legalCategory":"II. IRREPARABLE FAILURES OF THE CONSENT PROCESS (MSA & PAJA)","legalGround":"The Municipality cannot verify that the legal 50%+1 majority was genuinely achieved due to an unsecured and unverifiable process.","legalCitation":"MPRA s22(2)(b): Consent must be verifiable and auditable. PAJA s3: Procedurally unfair and irrational process."},{"id":"prob_23","statement":"The Ward Councillor actively promoted the SRA and did not recuse themselves from the Council decision.","legalCategory":"II. IRREPARABLE FAILURES OF THE CONSENT PROCESS (MSA & PAJA)","legalGround":"The Councillor's promotion constitutes a conflict of interest that taints the decision-making process by breaching the required municipal policy.","legalCitation":"Overstrand SRA Policy 9.1.3: Requires recusal of councillors promoting SRAs. Constitution s195: Principles of impartiality."}]},{"category":"Process is Illegal & Invalid","questions":[{"id":"proc_24","statement":"I did not receive notice of public meetings, despite being a property owner in Sandbaai","legalCategory":"I. FATAL BREACHES OF SRA ESTABLISHMENT LAW (By-Law & MPRA)","legalGround":"The applicant failed to provide adequate, verifiable notice to all affected property owners, rendering the consultation invalid and procedurally unfair.","legalCitation":"Overstrand SRA By-Law s5.3 & s7.1: Requires approved methods of notice. PAJA s3."},{"id":"proc_25","statement":"I did not receive proper public notice of the second public meeting, only an email a few days before.","legalCategory":"I. FATAL BREACHES OF SRA ESTABLISHMENT LAW (By-Law & MPRA)","legalGround":"The applicant failed to provide adequate, verifiable notice to all affected property owners, rendering the consultation invalid and procedurally unfair.","legalCitation":"Overstrand SRA By-Law s5.3 & s7.1: Requires approved methods of notice. PAJA s3."},{"id":"proc_26","statement":"I formally revoke my consent for the Sandbaai SRA, nullifying any prior vote.","legalCategory":"I. FATAL BREACHES OF SRA ESTABLISHMENT LAW (By-Law & MPRA)","legalGround":"The property owner hereby withdraws consent, which is their legal right until the SRA is finally determined.","legalCitation":"Municipal Property Rates Act (MPRA) s22(2)(b): Requires the consent of the majority; consent is revocable until determination."},{"id":"proc_27","statement":"The application documents contained different information (budget, services) than what was initially presented to me.","legalCategory":"I. FATAL BREACHES OF SRA ESTABLISHMENT LAW (By-Law & MPRA)","legalGround":"The material changes post-consent invalidate the entire process and demonstrate a failure of transparency.","legalCitation":"Overstrand SRA By-Law s6.2 & s8.3: Material amendments require new public process."},{"id":"proc_28","statement":"The current SRA plan and timeline is not what I agreed to (start date shifted to 2026 or 2027).","legalCategory":"I. FATAL BREACHES OF SRA ESTABLISHMENT LAW (By-Law & MPRA)","legalGround":"The significant delay in the implementation timeline constitutes a material amendment that invalidates all prior consent and requires new consultation.","legalCitation":"Overstrand SRA By-Law s6.2: Material amendments require new process."},{"id":"proc_29","statement":"The excessively long extended voting period resulted in changes in the SRA plan becoming obsolete.","legalCategory":"I. FATAL BREACHES OF SRA ESTABLISHMENT LAW (By-Law & MPRA)","legalGround":"The excessive duration of the voting period, coupled with material changes to the SRA plan during that period, renders the original process and resulting consents invalid.","legalCitation":"Overstrand SRA By-Law s4.3(b) (9-month limit implies timely process). PAJA s3: Procedurally unfair administrative action."},{"id":"proc_30","statement":"The geographic area and budget changed significantly after the consent period(e.g., H&E excluded & rates increased).","legalCategory":"I. FATAL BREACHES OF SRA ESTABLISHMENT LAW (By-Law & MPRA)","legalGround":"The material amendment of the SRA's boundary and business plan invalidates all prior approvals, requiring a new public process.","legalCitation":"Overstrand SRA By-Law s6.2 & s8.3: Material amendment requires new public meeting & re-advertisement. MPRA s22(2)(a)(i)."},{"id":"proc_31","statement":"The SRA application missed the mandatory submission deadline (9 months or September 30).","legalCategory":"I. FATAL BREACHES OF SRA ESTABLISHMENT LAW (By-Law & MPRA)","legalGround":"The application is procedurally void due to a breach of the mandatory time limit set out in municipal policy and the By-Law.","legalCitation":"Overstrand SRA By-Law s4.3(b): Mandates submission not more than nine months. Policy 10.4.4: Requires submission by 30 September."},{"id":"proc_32","statement":"The SRA business plan stated a compilation date to end voting would be stated, but the stated date was 31 January 2025.","legalCategory":"I. FATAL BREACHES OF SRA ESTABLISHMENT LAW (By-Law & MPRA)","legalGround":"The failure to finalize and disclose the voting deadline demonstrates a fundamental lack of procedural clarity and control.","legalCitation":"PAJA s3: Mandates procedurally fair administrative action. MSA s21A: Requires certainty in community participation processes."},{"id":"proc_33","statement":"The SRA NPC was formed in 2023, before municipal approval, demonstrating a predetermined outcome.","legalCategory":"I. FATAL BREACHES OF SRA ESTABLISHMENT LAW (By-Law & MPRA)","legalGround":"Pre-emptive registration of the NPC constitutes an Ultra Vires (beyond power) action taken without a municipal mandate, corrupting the bona fides of the process.","legalCitation":"Constitutional s195: Violated principles of impartiality. PAJA s6: Unlawful administrative action due to unauthorized predetermination."},{"id":"proc_34","statement":"The SRA website's own timeline shows the deadline for application was missed (Nov 2023 meeting → Aug 2024 deadline).","legalCategory":"I. FATAL BREACHES OF SRA ESTABLISHMENT LAW (By-Law & MPRA)","legalGround":"The SRA's own documentation confirms the mandatory nine-month submission deadline was breached, rendering the application procedurally void.","legalCitation":"Overstrand SRA By-Law s4.3(b): Mandates submission not more than nine months after the public meeting."},{"id":"proc_35","statement":"The Municipality's overall consultation process was insufficient and failed to genuinely engage the entire local community.","legalCategory":"II. IRREPARABLE FAILURES OF THE CONSENT PROCESS (MSA & PAJA)","legalGround":"The Municipality and the applicant failed to fulfill the statutory and constitutional obligation to properly consult the local community and facilitate genuine public participation.","legalCitation":"Municipal Systems Act (MSA) s152(1)(e): Requires encouraging community participation. MPRA s22(2)(a): Mandates consultation on SRA establishment. PAJA s3: Procedurally unfair administrative action."}]},{"category":"Unfit Leadership & Misconduct","questions":[{"id":"unfi_36","statement":"An SRA representative called my private number and harassed me or left an angry voicemail.","legalCategory":"III. UNFITNESS OF THE APPLICANT & POPIA VIOLATIONS","legalGround":"The conduct demonstrates a clear pattern of harassment and intimidation, violating the property owner's rights and the ethical standards required of a municipal partner.","legalCitation":"Constitutional s10 & s16: Right to dignity and freedom of expression (protected from harassment). PAJA s3: Mandates procedurally fair administrative action."},{"id":"unfi_37","statement":"As the SRA has openly threatened and filed charges against dissenters, I want protection against similar actions.","legalCategory":"III. UNFITNESS OF THE APPLICANT & POPIA VIOLATIONS","legalGround":"The use of vexatious litigation and threats demonstrates the entity is not fit to hold public power.","legalCitation":"PAJA s6: Decision to partner with an entity that engages in intimidation is procedurally unfair and irrational."},{"id":"unfi_38","statement":"Based on WhatsApp posts, voter information was shared with a third-parties including Lourens Theron, to help promote the SRA.","legalCategory":"III. UNFITNESS OF THE APPLICANT & POPIA VIOLATIONS","legalGround":"The unlawful processing and disclosure of personal data without consent constitutes a serious breach of national privacy law and a potential criminal offense.","legalCitation":"Protection of Personal Information Act (POPIA) s9-12, s19 & s69."},{"id":"unfi_39","statement":"I believe my personal information was abused, shared, or left exposed.","legalCategory":"III. UNFITNESS OF THE APPLICANT & POPIA VIOLATIONS","legalGround":"The unlawful processing and disclosure of personal data without consent constitutes a serious breach of national privacy law and a potential criminal offense.","legalCitation":"Protection of Personal Information Act (POPIA) s9-12, s19 & s69."},{"id":"unfi_40","statement":"I believe there are unresolved conflicts of interest and potential corruption in the steering committee's financial dealings.","legalCategory":"III. UNFITNESS OF THE APPLICANT & POPIA VIOLATIONS","legalGround":"The Steering Committee's conduct regarding undisclosed costs, tenders, and self-reimbursement poses an unacceptable risk to ratepayer funds.","legalCitation":"Constitutional s195: Principles of transparency and accountability. Overstrand SRA Policy 9.1.3: Conflict of interest requirements."},{"id":"unfi_41","statement":"I cannot trust the members of the SRA steering committee due to their conduct (e.g., lying, cyberbullying).","legalCategory":"III. UNFITNESS OF THE APPLICANT & POPIA VIOLATIONS","legalGround":"The steering committee's acknowledged misconduct demonstrates a lack of probity, rendering the entity unfit to manage public funds and perform delegated municipal functions.","legalCitation":"Constitutional s195: Principles of accountability and transparency."},{"id":"unfi_42","statement":"I gave my data to the OM and did not consent to OM sharing that data with unelected individuals for an SRA.","legalCategory":"III. UNFITNESS OF THE APPLICANT & POPIA VIOLATIONS","legalGround":"The Municipality's (or its agent's) processing of property owners' data for a purpose other than that for which it was originally collected constitutes a POPIA violation.","legalCitation":"POPIA s13: Restriction on further processing of personal information."},{"id":"unfi_43","statement":"I object to my personal information being on SRA director Robbie Roberts' laptop at public meetings and his offer to share it with individuals.","legalCategory":"III. UNFITNESS OF THE APPLICANT & POPIA VIOLATIONS","legalGround":"The unauthorized handling and storage of ratepayer personal information by an unverified third party (Steering Committee member) constitutes a clear failure to secure data, violating national privacy law.","legalCitation":"Protection of Personal Information Act (POPIA) s19: Obligation to secure the integrity and confidentiality of personal information. POPIA s1: Definition of unlawful processing."},{"id":"unfi_44","statement":"I was harassed, intimidated, or threatened by an SRA representative, or I witnessed it happening to others.","legalCategory":"III. UNFITNESS OF THE APPLICANT & POPIA VIOLATIONS","legalGround":"The proven pattern of harassment and intimidation demonstrates the entity's unsuitability for municipal partnership.","legalCitation":"Constitutional s16 & s33. PAJA s3."},{"id":"unfi_45","statement":"My personal information was on a Steering Committee member's laptop at public meetings.","legalCategory":"III. UNFITNESS OF THE APPLICANT & POPIA VIOLATIONS","legalGround":"The unauthorized handling and storage of personal data on a personal device in a public setting violates the duty to secure data integrity.","legalCitation":"POPIA s19: Obligation to secure the integrity and confidentiality of personal information."},{"id":"unfi_46","statement":"SRA Steering Committee members have actively opposed existing security measures in Sandbaai since their formation.","legalCategory":"III. UNFITNESS OF THE APPLICANT & POPIA VIOLATIONS","legalGround":"The SRA's demonstrated hostility towards existing, effective services indicates a conflict of interest and a failure to act in the best interest of the community.","legalCitation":"MSA s21A: Community participation must be genuine and constructive."},{"id":"unfi_47","statement":"The current SRA is unnecessary because the existing Sandbaai community groups are already doing excellent work.","legalCategory":"III. UNFITNESS OF THE APPLICANT & POPIA VIOLATIONS","legalGround":"The proposal lacks justification when non-profit community groups have already achieved significant improvements without a mandatory tariff.","legalCitation":"MPRA s22(2)(a)(ii)."},{"id":"unfi_48","statement":"The SRA account blocked people who asked questions on WhatsApp groups, preventing full public participation.","legalCategory":"III. UNFITNESS OF THE APPLICANT & POPIA VIOLATIONS","legalGround":"The deliberate act of preventing question-asking and blocking dissenting voices undermines the fairness and openness of the community participation process.","legalCitation":"MSA s21A: Requires a municipality (and its partners) to encourage and facilitate community participation."},{"id":"unfi_49","statement":"The SRA representatives promised to dissolve the NPC if they did not have the votes by 31/1/2025 and failed to do so.","legalCategory":"III. UNFITNESS OF THE APPLICANT & POPIA VIOLATIONS","legalGround":"The breach of a public promise made to secure initial compliance constitutes a fundamental breach of good faith and procedural fairness.","legalCitation":"PAJA s3: Procedurally unfair administrative action (breach of legitimate expectation)."},{"id":"unfi_50","statement":"The SRA Steering Committee is incompetent and has no relevant experience in security, finance, or NPC management.","legalCategory":"III. UNFITNESS OF THE APPLICANT & POPIA VIOLATIONS","legalGround":"The SRA lacks the requisite governance capacity and expertise to manage public funds, posing a serious financial risk.","legalCitation":"Overstrand SRA Policy 9.2.2: Management body must demonstrate capacity and expertise to execute the business plan."},{"id":"unfi_51","statement":"Voting at Sandbaai Saal violated POPIA by not securing ballots and exposing private information. Completed ballots were left lying on tables.","legalCategory":"III. UNFITNESS OF THE APPLICANT & POPIA VIOLATIONS","legalGround":"The failure to secure physical ballots in a public setting demonstrates a severe breach of the obligation to safeguard personal information, violating national data protection laws.","legalCitation":"POPIA s19: Obligation to secure the integrity and confidentiality of personal information."}]}];
+const objectionData = [{"category":"Financial Waste & Mismanagement","questions":[{"id":"fina_0","statement":"I cannot afford to pay an additional tariff, especially not for services I already pay for.","legalCategory":"FINANCIAL FRAUD & REDUNDANCY (MFMA & Procurement)","legalGround":"The SRA levy constitutes an undue financial burden and fails to make adequate provision for vulnerable groups.","legalCitation":"MSA s26 & s153: Obligation to ensure a sustainable standard of living. MPRA s17(b): Requires regulation of criteria for granting rebates.","order":4},{"id":"fina_1","statement":"I object to paying another tariff for services the municipality is already required to provide with my rates and taxes.","legalCategory":"FINANCIAL FRAUD & REDUNDANCY (MFMA & Procurement)","legalGround":"The SRA levy is unjustified as it funds services the Municipality is already constitutionally and statutorily obliged to provide, or is redundant to existing private services. This violates the 'improvement' requirement.","legalCitation":"Municipal Property Rates Act (MPRA) s22(2)(a)(ii): Requires proposed improvement or upgrading. Constitution s152 & s153: Basic municipal service delivery obligations.","order":4},{"id":"fina_2","statement":"I object to the financial non-viability of the Business Plan, especially after the 20% loss of income from H&A's exclusion.","legalCategory":"FINANCIAL FRAUD & REDUNDANCY (MFMA & Procurement)","legalGround":"The business plan is no longer sustainable, financially viable, or credible, and must be rejected on financial grounds.","legalCitation":"Municipal Property Rates Act (MPRA) s22(2)(a)(ii): Requires proposed improvement or upgrading. Constitution s152 & s153: Basic municipal service delivery obligations.","order":4},{"id":"fina_3","statement":"I object to the inflated costs in the budget (e.g., R92,000 for R3,000 cameras) and lack of value for money.","legalCategory":"FINANCIAL FRAUD & REDUNDANCY (MFMA & Procurement)","legalGround":"The budget demonstrates gross financial negligence and a failure to secure value for money as required by national financial law.","legalCitation":"Municipal Finance Management Act (MFMA) Principles: Requires good financial management and value for money.","order":4},{"id":"fina_4","statement":"I object to the SRA imposing a mandatory tariff on pensioners.","legalCategory":"FINANCIAL FRAUD & REDUNDANCY (MFMA & Procurement)","legalGround":"The SRA levy constitutes an undue financial burden and fails to make adequate provision for vulnerable groups.","legalCitation":"MSA s26 & s153: Obligation to ensure a sustainable standard of living. MPRA s17(b): Requires regulation of criteria for granting rebates.","order":4},{"id":"fina_5","statement":"I object to the use of tariff money to reimburse the Steering Committee's costs without full disclosure of expenditure.","legalCategory":"FINANCIAL FRAUD & REDUNDANCY (MFMA & Procurement)","legalGround":"The lack of transparency regarding establishment costs creates an unacceptable risk of corruption and undisclosed conflicts of interest.","legalCitation":"Overstrand SRA By-Law 4.2: Allows reimbursement but must follow MFMA principles of transparency.","order":4},{"id":"fina_6","statement":"The budget was manipulated to look viable (e.g., admitted to \"fiddling with numbers\" in internal documents).","legalCategory":"FINANCIAL FRAUD & REDUNDANCY (MFMA & Procurement)","legalGround":"The admission of budget manipulation constitutes prima facie evidence of fraudulent misrepresentation and a breach of the CFO's fiduciary oversight duties.","legalCitation":"MFMA s81(1)(b): Financial misconduct. MSA s22(1)(b): Requires a financially viable plan.","order":4},{"id":"fina_7","statement":"The same objections that H&E used apply to the gated community I live in.","legalCategory":"FINANCIAL FRAUD & REDUNDANCY (MFMA & Procurement)","legalGround":"The imposition of a mandatory tariff for services already paid for by private levies is unjustified.","legalCitation":"MPRA s22(2)(a)(ii): The SRA must provide a genuine improvement.","order":4},{"id":"fina_8","statement":"The SRA budget includes an excessive R160,000 salary for a manager who has no relevant experience.","legalCategory":"FINANCIAL FRAUD & REDUNDANCY (MFMA & Procurement)","legalGround":"The excessive cost for unproven capacity fails the requirement for cost-effective service delivery.","legalCitation":"Constitution s217. MFMA Principles: Requires a high standard of managerial capability.","order":4},{"id":"fina_9","statement":"The SRA budget presumes that particular vendors will get the contract without tender (e.g., for radio signal cameras).","legalCategory":"FINANCIAL FRAUD & REDUNDANCY (MFMA & Procurement)","legalGround":"The clear bias towards specific technology/vendors violates the constitutional and statutory requirements for public procurement.","legalCitation":"Constitution s217: Public procurement must be fair, equitable, transparent, competitive, and cost-effective. MFMA s112 & s118.","order":4},{"id":"fina_10","statement":"The SRA cannot guarantee the amount of the tariff or how much it will increase.","legalCategory":"FINANCIAL FRAUD & REDUNDANCY (MFMA & Procurement)","legalGround":"The lack of a guaranteed tariff ceiling or controlled escalation rate undermines the financial viability assessment and constitutes an open-ended liability for ratepayers.","legalCitation":"MFMA s17(3): Requires a sustainable budget and projections.","order":4},{"id":"fina_11","statement":"The SRA plan for camera installs is unnecessary because Sandbaai already has an excellent security system.","legalCategory":"FINANCIAL FRAUD & REDUNDANCY (MFMA & Procurement)","legalGround":"The proposal fails the statutory test for \"improvement or upgrading\" as the proposed service is redundant and inferior to existing private services.","legalCitation":"MPRA s22(2)(a)(ii): Requires \"proposed improvement or upgrading of the area.\"","order":4},{"id":"fina_12","statement":"The SRA's latest business plan shows a zeroing out of expenses to balance the budget, signifying previous budget bloat and a serious change in services.","legalCategory":"FINANCIAL FRAUD & REDUNDANCY (MFMA & Procurement)","legalGround":"Budget Manipulation is evident, which constitutes potential fraudulent misrepresentation and a material change requiring re-consultation.","legalCitation":"MFMA s81(1)(b): Financial misconduct. By-law 6.2: Requires new process for material amendments.","order":4}]},{"category":"Problems with My Vote & Consent","questions":[{"id":"prob_13","statement":"I believe my vote was obtained through unethical means (e.g., financial inducement, pressure, or misinformation).","legalCategory":"IRREPARABLE FAILURES OF THE CONSENT PROCESS (MSA & PAJA)","legalGround":"Consent obtained through financial inducement (vote-buying) or coercion is unlawful and invalidates the consent process.","legalCitation":"Common Law & MSA s22 Principles: Requires genuine, uncoerced consent; fraud vitiates consent.","order":2},{"id":"prob_14","statement":"I know of or witnessed vote-buying, where people were paid or offered vouchers to secure votes.","legalCategory":"IRREPARABLE FAILURES OF THE CONSENT PROCESS (MSA & PAJA)","legalGround":"Consent obtained through financial inducement (vote-buying) or coercion is unlawful and invalidates the consent process.","legalCitation":"Common Law & MSA s22 Principles: Requires genuine, uncoerced consent; fraud vitiates consent.","order":2},{"id":"prob_15","statement":"I object to 50%+1 consent being considered sufficient to enact an additional tariff on all property owners.","legalCategory":"IRREPARABLE FAILURES OF THE CONSENT PROCESS (MSA & PAJA)","legalGround":"The imposition of a mandatory additional tax on the minority without their consent, even if legally compliant, is considered procedurally unjust and fundamentally unfair to the community's right to equitable treatment.","legalCitation":"Municipal Property Rates Act (MPRA) s22(2)(b): Requires the consent of the majority. Constitution s33: Fair administrative action.","order":2},{"id":"prob_16","statement":"Property owners are not provided with verification that their 'No' votes were faithfully recorded.","legalCategory":"IRREPARABLE FAILURES OF THE CONSENT PROCESS (MSA & PAJA)","legalGround":"The lack of a secure, independent audit mechanism for dissent and consent makes the final result unverifiable and susceptible to fraud.","legalCitation":"MSA s22(2)(b): Requires the Municipality to obtain the consent of the majority.","order":2},{"id":"prob_17","statement":"Since the SRA was given the information used to verify consents, there is potential for fraud (conflict of interest).","legalCategory":"IRREPARABLE FAILURES OF THE CONSENT PROCESS (MSA & PAJA)","legalGround":"The dual role of the Steering Committee (applicant and data controller/verifier) is an inherent conflict of interest that compromises the integrity of the voting process.","legalCitation":"Constitutional s195: Principle of accountability and independence.","order":2},{"id":"prob_18","statement":"Survey Monkey and Google forms are susceptible to fraud and the SRA had a list of all property owners' data.","legalCategory":"IRREPARABLE FAILURES OF THE CONSENT PROCESS (MSA & PAJA)","legalGround":"The use of unsecured online mechanisms, coupled with access to property owners' data, creates an unacceptable risk of fraud and identity manipulation.","legalCitation":"PAJA s6: An administrative action based on an unverifiable and fraud-susceptible process is unlawful and irrational.","order":2},{"id":"prob_19","statement":"The SRA misled people on the board election process, stating they may be appointing themselves and discouraging candidates.","legalCategory":"IRREPARABLE FAILURES OF THE CONSENT PROCESS (MSA & PAJA)","legalGround":"The failure to follow a fair, transparent, and equitable process for director elections constitutes a governance failure and breach of public trust.","legalCitation":"PAJA s3: Mandates procedurally fair administrative action. Companies Act (NPC Governance).","order":2},{"id":"prob_20","statement":"The Urban Perception Survey totals were changed, or participants were forced to give inaccurate responses.","legalCategory":"IRREPARABLE FAILURES OF THE CONSENT PROCESS (MSA & PAJA)","legalGround":"The documented manipulation of public survey data constitutes fraudulent misrepresentation to the Municipality regarding the level of public support.","legalCitation":"MFMA s81(1)(b): Financial misconduct/fraudulent reporting. PAJA s6: Decision based on manipulated data is irrational and unlawful.","order":2},{"id":"prob_21","statement":"The voting forms were invalid because they did not include an option to formally object, only Yes/No.","legalCategory":"IRREPARABLE FAILURES OF THE CONSENT PROCESS (MSA & PAJA)","legalGround":"The omission of a formal objection option violates procedural fairness and misrepresents the ratepayer's right to register dissent.","legalCitation":"PAJA s3: Mandates procedurally fair administrative action.","order":2},{"id":"prob_22","statement":"The voting process was flawed (no ID verification, no audit trail, forms were left exposed at Sandbaai Saal).","legalCategory":"IRREPARABLE FAILURES OF THE CONSENT PROCESS (MSA & PAJA)","legalGround":"The Municipality cannot verify that the legal 50%+1 majority was genuinely achieved due to an unsecured and unverifiable process.","legalCitation":"MPRA s22(2)(b): Consent must be verifiable and auditable. PAJA s3: Procedurally unfair and irrational process.","order":2},{"id":"prob_23","statement":"The Ward Councillor actively promoted the SRA and did not recuse themselves from the Council decision.","legalCategory":"IRREPARABLE FAILURES OF THE CONSENT PROCESS (MSA & PAJA)","legalGround":"The Councillor's promotion constitutes a conflict of interest that taints the decision-making process by breaching the required municipal policy.","legalCitation":"Overstrand SRA Policy 9.1.3: Requires recusal of councillors promoting SRAs. Constitution s195: Principles of impartiality.","order":2},{"id":"prob_26","statement":"I formally revoke my consent for the Sandbaai SRA, nullifying any prior vote.","legalCategory":"FATAL BREACHES OF SRA ESTABLISHMENT LAW (By-Law & MPRA)","legalGround":"The property owner hereby withdraws consent, which is their legal right until the SRA is finally determined.","legalCitation":"Municipal Property Rates Act (MPRA) s22(2)(b): Requires the consent of the majority; consent is revocable until determination.","order":1,"isRevoke":true}]},{"category":"Process is Illegal & Invalid","questions":[{"id":"proc_24","statement":"I did not receive notice of public meetings, despite being a property owner in Sandbaai.","legalCategory":"FATAL BREACHES OF SRA ESTABLISHMENT LAW (By-Law & MPRA)","legalGround":"The applicant failed to provide adequate, verifiable notice to all affected property owners, rendering the consultation invalid and procedurally unfair.","legalCitation":"Overstrand SRA By-Law s5.3 & s7.1: Requires approved methods of notice. PAJA s3.","order":1},{"id":"proc_25","statement":"I did not receive proper public notice of the second public meeting, only an email a few days before.","legalCategory":"FATAL BREACHES OF SRA ESTABLISHMENT LAW (By-Law & MPRA)","legalGround":"The applicant failed to provide adequate, verifiable notice to all affected property owners, rendering the consultation invalid and procedurally unfair.","legalCitation":"Overstrand SRA By-Law s5.3 & s7.1: Requires approved methods of notice. PAJA s3.","order":1},{"id":"proc_27","statement":"The application documents contained different information (budget, services) than what was initially presented to me.","legalCategory":"FATAL BREACHES OF SRA ESTABLISHMENT LAW (By-Law & MPRA)","legalGround":"The material changes post-consent invalidate the entire process and demonstrate a failure of transparency.","legalCitation":"Overstrand SRA By-Law s6.2 & s8.3: Material amendments require new public process.","order":1},{"id":"proc_28","statement":"The current SRA plan and timeline is not what I agreed to (start date shifted to 2026 or 2027).","legalCategory":"FATAL BREACHES OF SRA ESTABLISHMENT LAW (By-Law & MPRA)","legalGround":"The significant delay in the implementation timeline constitutes a material amendment that invalidates all prior consent and requires new consultation.","legalCitation":"Overstrand SRA By-Law s6.2: Material amendments require new process.","order":1},{"id":"proc_29","statement":"The excessively long extended voting period resulted in changes in the SRA plan becoming obsolete.","legalCategory":"FATAL BREACHES OF SRA ESTABLISHMENT LAW (By-Law & MPRA)","legalGround":"The excessive duration of the voting period, coupled with material changes to the SRA plan during that period, renders the original process and resulting consents invalid.","legalCitation":"Overstrand SRA By-Law s4.3(b) (9-month limit implies timely process). PAJA s3: Procedurally unfair administrative action.","order":1},{"id":"proc_30","statement":"The geographic area and budget changed significantly after the consent period (e.g., H&E excluded & rates increased).","legalCategory":"FATAL BREACHES OF SRA ESTABLISHMENT LAW (By-Law & MPRA)","legalGround":"The material amendment of the SRA's boundary and business plan invalidates all prior approvals, requiring a new public process.","legalCitation":"Overstrand SRA By-Law s6.2 & s8.3: Material amendment requires new public meeting & re-advertisement. MPRA s22(2)(a)(i).","order":1},{"id":"proc_31","statement":"The SRA application missed the mandatory submission deadline (9 months or September 30).","legalCategory":"FATAL BREACHES OF SRA ESTABLISHMENT LAW (By-Law & MPRA)","legalGround":"The application is procedurally void due to a breach of the mandatory time limit set out in municipal policy and the By-Law.","legalCitation":"Overstrand SRA By-Law s4.3(b): Mandates submission not more than nine months. Policy 10.4.4: Requires submission by 30 September.","order":1},{"id":"proc_32","statement":"The SRA business plan stated a compilation date to end voting would be stated, but the stated date was 31 January 2025.","legalCategory":"FATAL BREACHES OF SRA ESTABLISHMENT LAW (By-Law & MPRA)","legalGround":"The failure to finalize and disclose the voting deadline demonstrates a fundamental lack of procedural clarity and control.","legalCitation":"PAJA s3: Mandates procedurally fair administrative action. MSA s21A: Requires certainty in community participation processes.","order":1},{"id":"proc_33","statement":"The SRA NPC was formed in 2023, before municipal approval, demonstrating a predetermined outcome.","legalCategory":"FATAL BREACHES OF SRA ESTABLISHMENT LAW (By-Law & MPRA)","legalGround":"Pre-emptive registration of the NPC constitutes an Ultra Vires (beyond power) action taken without a municipal mandate, corrupting the bona fides of the process.","legalCitation":"Constitutional s195: Violated principles of impartiality. PAJA s6: Unlawful administrative action due to unauthorized predetermination.","order":1},{"id":"proc_34","statement":"The SRA website's own timeline shows the deadline for application was missed (Nov 2023 meeting → Aug 2024 deadline).","legalCategory":"FATAL BREACHES OF SRA ESTABLISHMENT LAW (By-Law & MPRA)","legalGround":"The SRA's own documentation confirms the mandatory nine-month submission deadline was breached, rendering the application procedurally void.","legalCitation":"Overstrand SRA By-Law s4.3(b): Mandates submission not more than nine months after the public meeting.","order":1},{"id":"proc_35","statement":"The Municipality's overall consultation process was insufficient and failed to genuinely engage the entire local community.","legalCategory":"IRREPARABLE FAILURES OF THE CONSENT PROCESS (MSA & PAJA)","legalGround":"The Municipality and the applicant failed to fulfill the statutory and constitutional obligation to properly consult the local community and facilitate genuine public participation.","legalCitation":"Municipal Systems Act (MSA) s152(1)(e): Requires encouraging community participation. MPRA s22(2)(a): Mandates consultation on SRA establishment. PAJA s3: Procedurally unfair administrative action.","order":2}]},{"category":"Unfit Leadership & Misconduct","questions":[{"id":"unfi_36","statement":"An SRA representative called my private number and harassed me or left an angry voicemail.","legalCategory":"UNFITNESS OF THE APPLICANT & POPIA VIOLATIONS","legalGround":"The conduct demonstrates a clear pattern of harassment and intimidation, violating the property owner's rights and the ethical standards required of a municipal partner.","legalCitation":"Constitutional s10 & s16: Right to dignity and freedom of expression (protected from harassment). PAJA s3: Mandates procedurally fair administrative action.","order":3},{"id":"unfi_37","statement":"As the SRA has openly threatened and filed charges against dissenters, I want protection against similar actions.","legalCategory":"UNFITNESS OF THE APPLICANT & POPIA VIOLATIONS","legalGround":"The use of vexatious litigation and threats demonstrates the entity is not fit to hold public power.","legalCitation":"PAJA s6: Decision to partner with an entity that engages in intimidation is procedurally unfair and irrational.","order":3},{"id":"unfi_38","statement":"Based on WhatsApp posts, voter information was shared with third-parties including Lourens Theron, to help promote the SRA.","legalCategory":"UNFITNESS OF THE APPLICANT & POPIA VIOLATIONS","legalGround":"The unlawful processing and disclosure of personal data without consent constitutes a serious breach of national privacy law and a potential criminal offense.","legalCitation":"Protection of Personal Information Act (POPIA) s9-12, s19 & s69.","order":3},{"id":"unfi_39","statement":"I believe my personal information was abused, shared, or left exposed.","legalCategory":"UNFITNESS OF THE APPLICANT & POPIA VIOLATIONS","legalGround":"The unlawful processing and disclosure of personal data without consent constitutes a serious breach of national privacy law and a potential criminal offense.","legalCitation":"Protection of Personal Information Act (POPIA) s9-12, s19 & s69.","order":3},{"id":"unfi_40","statement":"I believe there are unresolved conflicts of interest and potential corruption in the steering committee's financial dealings.","legalCategory":"UNFITNESS OF THE APPLICANT & POPIA VIOLATIONS","legalGround":"The Steering Committee's conduct regarding undisclosed costs, tenders, and self-reimbursement poses an unacceptable risk to ratepayer funds.","legalCitation":"Constitutional s195: Principles of transparency and accountability. Overstrand SRA Policy 9.1.3: Conflict of interest requirements.","order":3},{"id":"unfi_41","statement":"I cannot trust the members of the SRA steering committee due to their conduct (e.g., lying, cyberbullying).","legalCategory":"UNFITNESS OF THE APPLICANT & POPIA VIOLATIONS","legalGround":"The steering committee's acknowledged misconduct demonstrates a lack of probity, rendering the entity unfit to manage public funds and perform delegated municipal functions.","legalCitation":"Constitutional s195: Principles of accountability and transparency.","order":3},{"id":"unfi_42","statement":"I gave my data to the OM and did not consent to OM sharing that data with unelected individuals for an SRA.","legalCategory":"UNFITNESS OF THE APPLICANT & POPIA VIOLATIONS","legalGround":"The Municipality's (or its agent's) processing of property owners' data for a purpose other than that for which it was originally collected constitutes a POPIA violation.","legalCitation":"POPIA s13: Restriction on further processing of personal information.","order":3},{"id":"unfi_43","statement":"I object to my personal information being on SRA director Robbie Roberts' laptop at public meetings and his offer to share it with individuals.","legalCategory":"UNFITNESS OF THE APPLICANT & POPIA VIOLATIONS","legalGround":"The unauthorized handling and storage of ratepayer personal information by an unverified third party (Steering Committee member) constitutes a clear failure to secure data, violating national privacy law.","legalCitation":"Protection of Personal Information Act (POPIA) s19: Obligation to secure the integrity and confidentiality of personal information. POPIA s1: Definition of unlawful processing.","order":3},{"id":"unfi_44","statement":"I was harassed, intimidated, or threatened by an SRA representative, or I witnessed it happening to others.","legalCategory":"UNFITNESS OF THE APPLICANT & POPIA VIOLATIONS","legalGround":"The proven pattern of harassment and intimidation demonstrates the entity's unsuitability for municipal partnership.","legalCitation":"Constitutional s16 & s33. PAJA s3.","order":3},{"id":"unfi_45","statement":"My personal information was on a Steering Committee member's laptop at public meetings.","legalCategory":"UNFITNESS OF THE APPLICANT & POPIA VIOLATIONS","legalGround":"The unauthorized handling and storage of personal data on a personal device in a public setting violates the duty to secure data integrity.","legalCitation":"POPIA s19: Obligation to secure the integrity and confidentiality of personal information.","order":3},{"id":"unfi_46","statement":"SRA Steering Committee members have actively opposed existing security measures in Sandbaai since their formation.","legalCategory":"UNFITNESS OF THE APPLICANT & POPIA VIOLATIONS","legalGround":"The SRA's demonstrated hostility towards existing, effective services indicates a conflict of interest and a failure to act in the best interest of the community.","legalCitation":"MSA s21A: Community participation must be genuine and constructive.","order":3},{"id":"unfi_47","statement":"The current SRA is unnecessary because the existing Sandbaai community groups are already doing excellent work.","legalCategory":"UNFITNESS OF THE APPLICANT & POPIA VIOLATIONS","legalGround":"The proposal lacks justification when non-profit community groups have already achieved significant improvements without a mandatory tariff.","legalCitation":"MPRA s22(2)(a)(ii).","order":3},{"id":"unfi_48","statement":"The SRA account blocked people who asked questions on WhatsApp groups, preventing full public participation.","legalCategory":"UNFITNESS OF THE APPLICANT & POPIA VIOLATIONS","legalGround":"The deliberate act of preventing question-asking and blocking dissenting voices undermines the fairness and openness of the community participation process.","legalCitation":"MSA s21A: Requires a municipality (and its partners) to encourage and facilitate community participation.","order":3},{"id":"unfi_49","statement":"The SRA representatives promised to dissolve the NPC if they did not have the votes by 31/1/2025 and failed to do so.","legalCategory":"UNFITNESS OF THE APPLICANT & POPIA VIOLATIONS","legalGround":"The breach of a public promise made to secure initial compliance constitutes a fundamental breach of good faith and procedural fairness.","legalCitation":"PAJA s3: Procedurally unfair administrative action (breach of legitimate expectation).","order":3},{"id":"unfi_50","statement":"The SRA Steering Committee is incompetent and has no relevant experience in security, finance, or NPC management.","legalCategory":"UNFITNESS OF THE APPLICANT & POPIA VIOLATIONS","legalGround":"The SRA lacks the requisite governance capacity and expertise to manage public funds, posing a serious financial risk.","legalCitation":"Overstrand SRA Policy 9.2.2: Management body must demonstrate capacity and expertise to execute the business plan.","order":3},{"id":"unfi_51","statement":"Voting at Sandbaai Saal violated POPIA by not securing ballots and exposing private information. Completed ballots were left lying on tables.","legalCategory":"UNFITNESS OF THE APPLICANT & POPIA VIOLATIONS","legalGround":"The failure to secure physical ballots in a public setting demonstrates a severe breach of the obligation to safeguard personal information, violating national data protection laws.","legalCitation":"POPIA s19: Obligation to secure the integrity and confidentiality of personal information.","order":3}]}];
 
 const state = {
   step: 1,
@@ -134,29 +187,68 @@ const state = {
   name: '',
   address: '',
   erf: '',
+  idNumber: '',
   email: '',
   phone: '',
   selected: new Set(),
-  personal: ''
+  personal: '',
+  hasRevokedConsent: false
 };
+
+function scrollToRevoke(){
+  state.step = 2;
+  renderStep();
+  setTimeout(() => {
+    const revokeCheckbox = document.getElementById('cb-prob_26');
+    if(revokeCheckbox){
+      revokeCheckbox.scrollIntoView({behavior:'smooth',block:'center'});
+      revokeCheckbox.parentElement.style.animation = 'pulse 1s ease-in-out 3';
+    }
+  }, 300);
+}
 
 function setProgress(){
   const pct = Math.round(((state.step - 1) / (state.totalSteps - 1)) * 100);
   document.getElementById('progressBar').style.width = pct + '%';
   document.getElementById('stepCounter').textContent = `Step ${state.step} of ${state.totalSteps}`;
-  const titles = ['Step 1 – Your Property','Step 2 – Choose issues','Step 3 – Personal statement','Step 4 – Review & generate'];
+  const titles = ['Step 1 – Your Information','Step 2 – Select your objections','Step 3 – Personal statement','Step 4 – Review & generate'];
   document.getElementById('stepTitle').textContent = titles[state.step-1];
+  renderStepNav();
+}
+
+function renderStepNav(){
+  const nav = document.getElementById('stepNav');
+  nav.innerHTML = '';
+  for(let i=1; i<=state.totalSteps; i++){
+    const dot = document.createElement('div');
+    dot.className = 'step-indicator';
+    if(i < state.step) dot.className += ' completed';
+    if(i === state.step) dot.className += ' active';
+    dot.onclick = () => jumpToStep(i);
+    dot.title = `Go to step ${i}`;
+    nav.appendChild(dot);
+  }
+}
+
+function jumpToStep(step){
+  if(step < 1 || step > state.totalSteps) return;
+  if(step === 1 || step < state.step){
+    state.step = step;
+    renderStep();
+  }
 }
 
 function saveDraft(){
   state.name = document.getElementById('name').value || '';
   state.address = document.getElementById('address').value || '';
   state.erf = document.getElementById('erf').value || '';
+  state.idNumber = document.getElementById('idNumber').value || '';
   state.email = document.getElementById('email').value || '';
   state.phone = document.getElementById('phone').value || '';
   state.personal = document.getElementById('personal') ? document.getElementById('personal').value : '';
   const data = {
-    name: state.name, address: state.address, erf: state.erf, email: state.email, phone: state.phone, selected: Array.from(state.selected), personal: state.personal
+    name: state.name, address: state.address, erf: state.erf, idNumber: state.idNumber,
+    email: state.email, phone: state.phone, selected: Array.from(state.selected), personal: state.personal
   };
   try {
     localStorage.setItem('sraObjectionDraft', JSON.stringify(data));
@@ -174,6 +266,7 @@ function loadDraft(){
     document.getElementById('name').value = d.name || '';
     document.getElementById('address').value = d.address || '';
     document.getElementById('erf').value = d.erf || '';
+    document.getElementById('idNumber').value = d.idNumber || '';
     document.getElementById('email').value = d.email || '';
     document.getElementById('phone').value = d.phone || '';
     if(document.getElementById('personal')) document.getElementById('personal').value = d.personal || '';
@@ -185,35 +278,65 @@ function loadDraft(){
 function renderCategories(){
   const el = document.getElementById('categories');
   el.innerHTML = '';
-  objectionData.forEach((catData, catIndex)=>{
+  
+  const orderedCategories = [
+    "Process is Illegal & Invalid",
+    "Problems with My Vote & Consent",
+    "Unfit Leadership & Misconduct",
+    "Financial Waste & Mismanagement"
+  ];
+  
+  orderedCategories.forEach((catName, catIndex) => {
+    const catData = objectionData.find(c => c.category === catName);
+    if(!catData) return;
+    
     const container = document.createElement('div');
     container.className = 'accordion';
     const catId = 'cat-' + catIndex;
     container.innerHTML = `
       <div class="section-head" onclick="toggleAccordion('${catId}')">
         <h3>${catData.category}</h3>
-        <div class="toggle muted">▼</div>
+        <div class="toggle">▼</div>
       </div>
       <div id="${catId}" class="section-content">
         <div id="${catId}-items"></div>
       </div>
     `;
     el.appendChild(container);
+    
     const listEl = container.querySelector(`#${catId}-items`);
     catData.questions.forEach(item=>{
       const id = item.id;
       const box = document.createElement('label');
       box.className = 'checkbox';
+      if(item.isRevoke) box.className += ' revoke-consent';
+      box.id = 'label-' + id;
       box.innerHTML = `
-        <input type="checkbox" id="cb-${id}" ${state.selected.has(id) ? 'checked' : ''} onchange="toggleItem('${id}')"/>
+        <input type="checkbox" id="cb-${id}" ${state.selected.has(id) ? 'checked' : ''} onchange="toggleItem('${id}', ${item.isRevoke || false})"/>
         <div style="flex:1">
           <div style="font-weight:600">${escapeHtml(item.statement)}</div>
-          <div class="muted">${escapeHtml(item.legalCategory)}</div>
         </div>
       `;
       listEl.appendChild(box);
     });
+    
+    if(catName === "Problems with My Vote & Consent"){
+      const revokeLink = document.createElement('div');
+      revokeLink.style.cssText = 'margin-top:10px;padding:10px;background:#fff3cd;border-radius:6px;text-align:center';
+      revokeLink.innerHTML = '<strong>Want to revoke your consent?</strong> <a href="#" onclick="scrollToRevokeInCategory();return false;" style="color:#125b7a;font-weight:700">Click here</a>';
+      listEl.appendChild(revokeLink);
+    }
   });
+}
+
+function scrollToRevokeInCategory(){
+  const revokeCheckbox = document.getElementById('cb-prob_26');
+  if(revokeCheckbox){
+    revokeCheckbox.scrollIntoView({behavior:'smooth',block:'center'});
+    setTimeout(() => {
+      revokeCheckbox.parentElement.parentElement.style.animation = 'pulse 1s ease-in-out 3';
+    }, 300);
+  }
 }
 
 function toggleAccordion(catId){
@@ -223,8 +346,14 @@ function toggleAccordion(catId){
   head.classList.toggle('open');
 }
 
-function toggleItem(id){
-  if(state.selected.has(id)) state.selected.delete(id); else state.selected.add(id);
+function toggleItem(id, isRevoke){
+  if(state.selected.has(id)) {
+    state.selected.delete(id);
+    if(isRevoke) state.hasRevokedConsent = false;
+  } else {
+    state.selected.add(id);
+    if(isRevoke) state.hasRevokedConsent = true;
+  }
   updatePreview();
 }
 
@@ -235,14 +364,16 @@ function buildGrouped(){
   
   const groups = {};
   selectedArr.forEach(item=>{
-    if(!groups[item.legalCategory]) groups[item.legalCategory] = [];
-    groups[item.legalCategory].push(item);
+    if(!groups[item.legalCategory]) groups[item.legalCategory] = {order: item.order, items: []};
+    groups[item.legalCategory].items.push(item);
   });
   
+  const sortedCategories = Object.keys(groups).sort((a,b) => groups[a].order - groups[b].order);
+  
   let out='';
-  Object.keys(groups).forEach(cat=>{
+  sortedCategories.forEach(cat=>{
     out += `<div class="legal-header">${escapeHtml(cat)}</div>`;
-    groups[cat].forEach(item=>{
+    groups[cat].items.forEach(item=>{
       out += `<div style="margin-top:6px"><strong>•</strong> ${escapeHtml(item.legalGround)}<div class="citation">${escapeHtml(item.legalCitation)}</div></div>`;
     });
   });
@@ -263,10 +394,12 @@ function nextStep(){
     state.name = document.getElementById('name').value.trim();
     state.address = document.getElementById('address').value.trim();
     state.erf = document.getElementById('erf').value.trim();
+    state.idNumber = document.getElementById('idNumber').value.trim();
     state.email = document.getElementById('email').value.trim();
     state.phone = document.getElementById('phone').value.trim();
-    if(!state.name || !state.erf){
-      if(!confirm('Name and Erf are recommended. Proceed even if missing?')) return;
+    if(!state.name){
+      alert('Please enter your full name (required).');
+      return;
     }
   }
   if(state.step===2){
@@ -297,24 +430,129 @@ function renderStep(){
   if(state.step===4){
     state.personal = document.getElementById('personal').value || '';
     document.getElementById('finalPreview').innerHTML = generateFinalObjectionHTML();
+    
+    if(state.hasRevokedConsent){
+      document.getElementById('revokeNoticeContainer').innerHTML = `
+        <div class="revoke-notice">
+          ⚠️ You have selected to formally revoke your consent. This will be prominently stated in your objection.
+        </div>
+      `;
+    } else {
+      document.getElementById('revokeNoticeContainer').innerHTML = '';
+    }
   }
 }
 
 function generateFinalObjectionHTML(){
   const today = new Date().toLocaleDateString('en-ZA', {year:'numeric', month:'long', day:'numeric'});
-  const header = `<div style="font-weight:700;font-size:1.05rem;margin-bottom:6px">Formal Objection to the Proposed Sandbaai SRA</div>
-  <div class="muted">Date: ${today}</div>
-  <div class="muted">Submitted by: ${escapeHtml(state.name||'[Name not provided]')}${state.erf ? ' — Erf ' + escapeHtml(state.erf) : ''}${state.address ? ' — ' + escapeHtml(state.address) : ''}</div>
-  ${state.email ? '<div class="muted">Email: ' + escapeHtml(state.email) + '</div>' : ''}
-  ${state.phone ? '<div class="muted">Phone: ' + escapeHtml(state.phone) + '</div>' : ''}
-  <div style="margin-top:12px"></div>`;
+  const allQuestions = objectionData.flatMap(c => c.questions);
+  const selectedArr = allQuestions.filter(m=>state.selected.has(m.id));
+  
+  let header = `<div style="font-weight:700;font-size:1.1rem;margin-bottom:8px">FORMAL OBJECTION TO THE PROPOSED SANDBAAI SRA</div>`;
+  header += `<div style="margin-top:8px"><strong>Date:</strong> ${today}</div>`;
+  header += `<div><strong>Name:</strong> ${escapeHtml(state.name||'[Name not provided]')}</div>`;
+  if(state.idNumber) header += `<div><strong>ID Number:</strong> ${escapeHtml(state.idNumber)}</div>`;
+  else header += `<div><strong>ID Number:</strong> ***ENTER YOUR ID NUMBER***</div>`;
+  if(state.erf) header += `<div><strong>Erf/Stand:</strong> ${escapeHtml(state.erf)}</div>`;
+  if(state.address) header += `<div><strong>Address:</strong> ${escapeHtml(state.address)}</div>`;
+  if(state.email) header += `<div><strong>Email:</strong> ${escapeHtml(state.email)}</div>`;
+  if(state.phone) header += `<div><strong>Phone:</strong> ${escapeHtml(state.phone)}</div>`;
+  
+  let revokeSection = '';
+  if(state.hasRevokedConsent){
+    revokeSection = `<div style="margin-top:14px;padding:12px;background:#fff3cd;border:2px solid #ffc107;border-radius:6px">
+      <div style="font-weight:700;font-size:1.05rem;margin-bottom:6px">FORMAL REVOCATION OF CONSENT</div>
+      <div>I, ${escapeHtml(state.name)}, hereby formally and irrevocably REVOKE any consent I may have previously given for the establishment of the Sandbaai Special Rating Area (SRA). This revocation is exercised in accordance with my legal right to withdraw consent at any time prior to final determination of the SRA application.</div>
+      <div style="margin-top:6px;font-style:italic">Legal Basis: Municipal Property Rates Act (MPRA) s22(2)(b) expressly requires the consent of the majority of property owners, and consent remains revocable until the SRA is finally determined by the Municipality.</div>
+    </div>`;
+  }
+  
+  let plainTextStatements = '';
+  if(selectedArr.length > 0){
+    plainTextStatements = `<div style="margin-top:14px"><div style="font-weight:700;margin-bottom:6px">MY OBJECTIONS:</div>`;
+    selectedArr.forEach((item, idx) => {
+      plainTextStatements += `<div style="margin-top:6px">${idx+1}. ${escapeHtml(item.statement)}</div>`;
+    });
+    plainTextStatements += `</div>`;
+  }
   
   const grouped = buildGrouped();
-  const personal = state.personal ? `<div class="legal-header" style="margin-top:12px">Personal Statement</div><div style="margin-top:6px">${escapeHtml(state.personal)}</div>` : '';
-  const closing = `<div style="margin-top:14px;padding-top:10px;border-top:1px solid #e6edf2">I request that the Municipality: (a) reject the SRA application, or (b) require the applicant to re-run proper public participation and address the legal grounds cited above.</div>
-  <div style="margin-top:10px">Signed: ${escapeHtml(state.name||'[Name]')}</div>`;
+  let legalGrounds = '';
+  if(grouped && grouped !== '<div class="muted">No items selected yet.</div>'){
+    legalGrounds = `<div style="margin-top:14px"><div style="font-weight:700;margin-bottom:6px">LEGAL GROUNDS:</div>${grouped}</div>`;
+  }
   
-  return header + (grouped||'<div class="muted">No specific legal grounds selected.</div>') + personal + closing;
+  const personal = state.personal ? `<div style="margin-top:14px"><div style="font-weight:700;margin-bottom:6px">PERSONAL STATEMENT:</div><div style="margin-top:6px">${escapeHtml(state.personal)}</div></div>` : '';
+  
+  const closing = `<div style="margin-top:14px;padding-top:10px;border-top:1px solid #e6edf2">
+    <div style="font-weight:700;margin-bottom:6px">REQUEST FOR ACTION:</div>
+    <div>I respectfully request that Overstrand Municipality:</div>
+    <div style="margin-top:6px">(a) REJECT the Sandbaai SRA application in its entirety; OR</div>
+    <div>(b) REQUIRE the applicant to conduct a new, lawful public participation process that addresses all legal grounds cited above.</div>
+    <div style="margin-top:10px"><strong>Signed:</strong> ${escapeHtml(state.name||'[Name]')}</div>
+  </div>`;
+  
+  return header + revokeSection + plainTextStatements + legalGrounds + personal + closing;
+}
+
+function generatePlainTextEmail(){
+  const today = new Date().toLocaleDateString('en-ZA', {year:'numeric', month:'long', day:'numeric'});
+  const allQuestions = objectionData.flatMap(c => c.questions);
+  const selectedArr = allQuestions.filter(m=>state.selected.has(m.id));
+  
+  let text = `FORMAL OBJECTION TO THE PROPOSED SANDBAAI SRA\n\n`;
+  text += `Date: ${today}\n`;
+  text += `Name: ${state.name||'[Name not provided]'}\n`;
+  text += `ID Number: ${state.idNumber || '***ENTER YOUR ID NUMBER***'}\n`;
+  if(state.erf) text += `Erf/Stand: ${state.erf}\n`;
+  if(state.address) text += `Address: ${state.address}\n`;
+  if(state.email) text += `Email: ${state.email}\n`;
+  if(state.phone) text += `Phone: ${state.phone}\n`;
+  
+  if(state.hasRevokedConsent){
+    text += `\n${'='.repeat(60)}\n`;
+    text += `FORMAL REVOCATION OF CONSENT\n`;
+    text += `${'='.repeat(60)}\n\n`;
+    text += `I, ${state.name}, hereby formally and irrevocably REVOKE any consent I may have previously given for the establishment of the Sandbaai Special Rating Area (SRA). This revocation is exercised in accordance with my legal right to withdraw consent at any time prior to final determination of the SRA application.\n\n`;
+    text += `Legal Basis: Municipal Property Rates Act (MPRA) s22(2)(b) expressly requires the consent of the majority of property owners, and consent remains revocable until the SRA is finally determined by the Municipality.\n`;
+  }
+  
+  if(selectedArr.length > 0){
+    text += `\nMY OBJECTIONS:\n${'-'.repeat(60)}\n`;
+    selectedArr.forEach((item, idx) => {
+      text += `\n${idx+1}. ${item.statement}\n`;
+    });
+  }
+  
+  if(selectedArr.length > 0){
+    text += `\n\nLEGAL GROUNDS:\n${'='.repeat(60)}\n`;
+    const groups = {};
+    selectedArr.forEach(item=>{
+      if(!groups[item.legalCategory]) groups[item.legalCategory] = {order: item.order, items: []};
+      groups[item.legalCategory].items.push(item);
+    });
+    
+    const sortedCategories = Object.keys(groups).sort((a,b) => groups[a].order - groups[b].order);
+    
+    sortedCategories.forEach(cat=>{
+      text += `\n${cat}\n${'-'.repeat(60)}\n`;
+      groups[cat].items.forEach(item=>{
+        text += `\n• ${item.legalGround}\n  Citation: ${item.legalCitation}\n`;
+      });
+    });
+  }
+  
+  if(state.personal){
+    text += `\n\nPERSONAL STATEMENT:\n${'-'.repeat(60)}\n${state.personal}\n`;
+  }
+  
+  text += `\n\nREQUEST FOR ACTION:\n${'='.repeat(60)}\n`;
+  text += `I respectfully request that Overstrand Municipality:\n\n`;
+  text += `(a) REJECT the Sandbaai SRA application in its entirety; OR\n`;
+  text += `(b) REQUIRE the applicant to conduct a new, lawful public participation process that addresses all legal grounds cited above.\n\n`;
+  text += `Signed: ${state.name||'[Name]'}\n`;
+  
+  return text;
 }
 
 async function downloadPDF(){
@@ -326,9 +564,16 @@ async function downloadPDF(){
   const maxWidth = pageWidth - (margin * 2);
   let y = margin;
   
+  function checkPageBreak(neededSpace){
+    if(y + neededSpace > 270){
+      doc.addPage();
+      y = margin;
+    }
+  }
+  
   doc.setFontSize(14);
   doc.setFont(undefined, 'bold');
-  doc.text('Formal Objection to the Proposed Sandbaai SRA', margin, y);
+  doc.text('FORMAL OBJECTION TO THE PROPOSED SANDBAAI SRA', margin, y);
   y += lineHeight + 2;
   
   doc.setFontSize(10);
@@ -336,31 +581,26 @@ async function downloadPDF(){
   const today = new Date().toLocaleDateString('en-ZA', {year:'numeric', month:'long', day:'numeric'});
   doc.text('Date: ' + today, margin, y);
   y += lineHeight;
-  
-  const meta = `Submitted by: ${state.name||'[Name]'}${state.erf ? ' - Erf ' + state.erf : ''}${state.address ? ' - ' + state.address : ''}`;
-  const metaLines = doc.splitTextToSize(meta, maxWidth);
-  doc.text(metaLines, margin, y);
-  y += lineHeight * metaLines.length;
-  
-  if(state.email){
-    doc.text('Email: ' + state.email, margin, y);
-    y += lineHeight;
+  doc.text('Name: ' + (state.name||'[Name]'), margin, y);
+  y += lineHeight;
+  doc.text('ID Number: ' + (state.idNumber ? state.idNumber : '_______________________________'), margin, y);
+  y += lineHeight;
+  if(state.erf){ doc.text('Erf/Stand: ' + state.erf, margin, y); y += lineHeight; }
+  if(state.address){ 
+    const addrLines = doc.splitTextToSize('Address: ' + state.address, maxWidth);
+    doc.text(addrLines, margin, y);
+    y += lineHeight * addrLines.length;
   }
-  if(state.phone){
-    doc.text('Phone: ' + state.phone, margin, y);
-    y += lineHeight;
-  }
+  if(state.email){ doc.text('Email: ' + state.email, margin, y); y += lineHeight; }
+  if(state.phone){ doc.text('Phone: ' + state.phone, margin, y); y += lineHeight; }
   
   y += 4;
   
-  const content = stripHtml(generateFinalObjectionHTML());
-  const lines = doc.splitTextToSize(content, maxWidth);
+  const plainText = generatePlainTextEmail();
+  const lines = doc.splitTextToSize(plainText, maxWidth);
   
   lines.forEach(line => {
-    if(y > 270){
-      doc.addPage();
-      y = margin;
-    }
+    checkPageBreak(lineHeight);
     doc.text(line, margin, y);
     y += lineHeight;
   });
@@ -370,35 +610,35 @@ async function downloadPDF(){
   const pageCount = doc.internal.getNumberOfPages();
   for(let i=1; i<=pageCount; i++){
     doc.setPage(i);
-    doc.text('Generated by Sandbaai SRA Objection Builder', margin, 285);
+    doc.text('Generated by Sandbaai SRA Objection Assistant', margin, 285);
     doc.text(`Page ${i} of ${pageCount}`, pageWidth - margin - 20, 285);
   }
   
-  doc.save(`Sandbaai_SRA_Objection_${(state.erf||'submission').replace(/\s+/g,'_')}.pdf`);
-}
-
-function stripHtml(html){
-  const tmp = document.createElement('div');
-  tmp.innerHTML = html;
-  return tmp.textContent || tmp.innerText || '';
+  doc.save(`Sandbaai_SRA_Objection_${(state.erf||state.name||'submission').replace(/\s+/g,'_')}.pdf`);
 }
 
 function openEmail(){
-  const municipalityEmail = 'legal@overstrand.gov.za';
+  const toEmails = 'CFO@overstrand.gov.za;dlouw@overstrand.gov.za';
+  const ccEmails = 'mm@overstrand.gov.za;mayor@overstrand.gov.za';
+  const bccEmails = 'ilovesandbaai@gmail.com';
   const subject = encodeURIComponent('Formal Objection – Sandbaai SRA Application');
-  const body = encodeURIComponent(stripHtml(generateFinalObjectionHTML()));
-  const mailto = `mailto:${municipalityEmail}?subject=${subject}&body=${body}`;
+  const body = encodeURIComponent(generatePlainTextEmail());
+  const mailto = `mailto:${toEmails}?cc=${ccEmails}&bcc=${bccEmails}&subject=${subject}&body=${body}`;
   window.open(mailto);
 }
 
 function init(){
   setProgress();
   loadDraft();
-  renderCategories();
-  updatePreview();
 }
 
 init();
 </script>
+<style>
+@keyframes pulse {
+  0%, 100% { background-color: #fafcff; }
+  50% { background-color: #fff3cd; }
+}
+</style>
 </body>
 </html>
