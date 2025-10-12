@@ -512,6 +512,7 @@ function generateFinalObjectionHTML(){
     <div style="margin-left:20px">• Restart of all voting from zero with proper safeguards and verification;</div>
     <div style="margin-left:20px">• Full compliance with all legal requirements for notice, consultation, and public participation;</div>
     <div style="margin-left:20px">• Complete transparency regarding all costs, plans, and governance structures.</div>
+    <div style="margin-left:20px">(c) CONFIRM in writing that my ‘No’ consent or revocation has been faithfully recorded in the official municipal register.</div>
     <div style="margin-top:10px"><strong>Signed:</strong> ${escapeHtml(state.name||'[Name]')}</div>
   </div>`;
   
@@ -581,6 +582,7 @@ function generatePlainTextEmail(){
   text += `    • Restart of all voting from zero with proper safeguards and verification;\n`;
   text += `    • Full compliance with all legal requirements for notice, consultation, and public participation;\n`;
   text += `    • Complete transparency regarding all costs, plans, and governance structures.\n\n`;
+  text += `(c) CONFIRM in writing that my ‘No’ consent or revocation has been faithfully recorded in the official municipal register.\n\n`;
   text += `Signed: ${state.name||'[Name]'}\n`;
   
   return text;
