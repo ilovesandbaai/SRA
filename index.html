@@ -134,6 +134,10 @@
         <div style="display:flex;gap:12px;flex-wrap:wrap">
           <div style="flex:1;min-width:280px">
             <label style="font-size:1.1rem">SELECT YOUR OBJECTIONS</label>
+            <div class="top-next-container">
+  <button class="btn small" style="float:right; margin-bottom:10px;" onclick="nextStep()">Next</button>
+  <div style="clear:both;"></div>
+</div>
             <div id="categories"></div>
           </div>
           <div style="width:44%;min-width:240px">
@@ -729,6 +733,15 @@ init();
 @keyframes pulse {
   0%, 100% { background-color: #fafcff; }
   50% { background-color: #fff3cd; }
+}
+.top-next-container {
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 50;
+  padding-top: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #ddd;
 }
 </style>
 </body>
