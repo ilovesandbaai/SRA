@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Sandbaai SRA Objection Builder</title>
+<meta name="description" content="Generate a formal objection to the Sandbaai SRA application — simple, private, and legally structured." />
+<!-- Minimal responsive CSS -->
+<style>
+  :root{--accent:#125b7a;--muted:#666;--bg:#f7fafc;font-family:Inter,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial;}
+  body{margin:0;background:var(--bg);color:#0b1720;line-height:1.45}
+  .container{max-width:980px;margin:20px auto;padding:18px}
+  header{display:flex;align-items:center;gap:12px}
+  h1{margin:0;font-size:1.35rem}
+  p.lead{margin:6px 0 18px;color:var(--muted)}
+  .card{background:#fff;padding:14px;border-radius:10px;box-shadow:0 4px 18px rgba(11,23,32,0.06);margin-bottom:14px}
+  label{display:block;font-weight:600;margin-bottom:6px}
+  input[type="text"], input[type="email"], textarea, select{width:100%;padding:10px;border-radius:8px;border:1px solid #e6edf2}
+  .row{display:flex;gap:10px}
+  .row > *{flex:1}
+  .accordion{border-radius:8px;overflow:hidden;border:1px solid #e6edf2}
+  .section-head{display:flex;justify-content:space-between;align-items:center;padding:10px;background:#fafcff;cursor:pointer}
+  .section-head h3{margin:0;font-size:1rem}
+  .section-content{padding:10px;border-top:1px solid #eef6fb}
+  .checkbox{display:flex;align-items:flex-start;gap:10px;padding:8px;border-radius:6px;margin-bottom:6px}
+  .checkbox input{margin-top:5px}
+  .muted{color:var(--muted);font-size:0.9rem}
+  .flex-between{display:flex;justify-content:space-between;align-items:center}
+  .btn{background:var(--accent);color:#fff;padding:10px 14px;border-radius:8px;border:0;cursor:pointer}
+  .btn.alt{background:#fff;color:var(--accent);border:1px solid var(--accent)}
+  .progress{height:10px;background:#e6edf2;border-radius:20px;overflow:hidden}
+  .progress > i{display:block;height:100%;background:var(--accent);width:0%}
+  .preview{max-height:420px;overflow:auto;padding:10px;background:#fff;border-radius:8px;border:1px solid #e6edf2}
+  .legal-header{font-weight:700;margin-top:10px}
+  .citation{font-size:0.9rem;color:var(--muted);margin-top:4px}
+  @media (max-width:700px){
+    .row{flex-direction:column}
+  }
+  footer{margin-top:18px;text-align:center;color:var(--muted);font-size:0.9rem}
+</style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="6" fill="#125b7a"/><path d="M7 12h10M7 8h10M7 16h6" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/></svg>
+      <div>
+        <h1>Sandbaai SRA — Objection Builder</h1>
+        <p class="lead">Friendly form that turns your selections and personal input into a legally structured objection letter. No legal knowledge required.</p>
+      </div>
+    </header>
+
+    <!-- Step container -->
+    <div id="app" class="card">
+      <!-- Progress -->
+      <div style="margin-bottom:12px">
+        <div class="flex-between"><div><strong id="stepTitle">Step 1 — Your Property</strong></div><div class="muted" id="stepCounter">Step 1 of 4</div></div>
+        <div class="progress" aria-hidden="true"><i id="progressBar"></i></div>
+      </div>
+
+      <!-- Step 1: Identity -->
+      <div id="step-1" class="step">
+        <label for="name">Full name</label>
+        <input id="name" placeholder="Your full name (owner or representative)" />
+        <div class="row" style="margin-top:8px">
+          <div><label for="address">Property address</label><input id="address" placeholder="Street, Erf or complex name" /></div>
+          <div><label for="erf">Erf / Stand number</label><input id="erf" placeholder="e.g., Erf 123" /></div>
+        </div>
+        <div class="row" style="margin-top:8px">
+          <div><label for="email">Email (optional for delivery)</label><input id="email" type="email" placeholder="you@example.com" /></div>
+          <div><label for="phone">Phone (optional)</label><input id="phone" placeholder="+27 ..." /></div>
+        </div>
+        <div style="margin-top:10px" class="flex-between">
+          <button class="btn" onclick="nextStep()">Next</button>
+          <button class="btn alt" onclick="saveDraft()">Save draft (browser)</button>
+        </div>
+      </div>
+
+      <!-- Step 2: Selection -->
+      <div id="step-2" class="step" style="display:none">
+        <div style="display:flex;gap:12px">
+          <div style="flex:1">
+            <label>Choose the issues that apply to you</label>
+            <div id="categories"></div>
+          </div>
+          <div style="width:44%;min-width:240px">
+            <label>Live Preview</label>
+            <div class="preview" id="livePreview">No items selected yet.</div>
+          </div>
+        </div>
+        <div style="margin-top:10px" class="flex-between">
+          <button class="btn alt" onclick="prevStep()">Back</button>
+          <div>
+            <button class="btn" onclick="nextStep()">Next</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Personal story -->
+      <div id="step-3" class="step" style="display:none">
+        <label for="personal">Personal statement (optional)</label>
+        <textarea id="personal" rows="6" placeholder="Describe how this affects you, dates, witnesses, incidents, and evidence (optional)"></textarea>
+        <div style="margin-top:8px" class="muted">Tip: personal, precise details (dates, places, witness names) make objections stronger.</div>
+        <div style="margin-top:10px" class="flex-between">
+          <button class="btn alt" onclick="prevStep()">Back</button>
+          <button class="btn" onclick="nextStep()">Review & Generate</button>
+        </div>
+      </div>
+
+      <!-- Step 4: Review & Generate -->
+      <div id="step-4" class="step" style="display:none">
+        <label>Review the objection</label>
+        <div id="finalPreview" class="preview"></div>
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn" onclick="downloadPDF()">Download PDF</button>
+          <button class="btn" onclick="openEmail()">Open email draft</button>
+          <button class="btn alt" onclick="prevStep()">Edit selections</button>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <div class="muted">This tool stores nothing on servers. All data is processed in your browser. Use responsibly.</div>
+    </footer>
+  </div>
+
+<!-- Load jsPDF from CDN for PDF generation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha512-t3q8j9m3e6tZ5cZ2jR3u0kH0qk5wD6a6j6Wb3pQhGzM7gJY0wP1u6Jx7kM3kJZ8pZk5tq1x6n4s5m6p7q8r9g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<script>
+/* ---------- Paste CSV converted JSON here ---------- */
+/* Converted JSON from user's CSV mapping (trimmed for brevity in the sample).
+   Full JSON must contain every row. For production, paste full JSON generated from the CSV. */
+const mapping = [
+  {
+    "id": "m1",
+    "statement": "I cannot afford to pay an additional tariff, especially not  for services I already pay for.",
+    "publicCategory": "Financial Waste & Mismanagement",
+    "legalCategory": "IV. FINANCIAL FRAUD & REDUNDANCY (MFMA & Procurement)",
+    "legalGround": "The SRA levy constitutes an undue financial burden and fails to make adequate provision for vulnerable groups.",
+    "citation": "MSA s26 & s153: Obligation to ensure a sustainable standard of living. MPRA s17(b): Requires regulation of criteria for granting rebates."
+  },
+  {
+    "id": "m2",
+    "statement": "I object to paying another tariff for services the municipality is already required to provide with my rates and taxes.",
+    "publicCategory": "Financial Waste & Mismanagement",
+    "legalCategory": "IV. FINANCIAL FRAUD & REDUNDANCY (MFMA & Procurement)",
+    "legalGround": "The SRA levy is unjustified as it funds services the Municipality is already constitutionally and statutorily obliged to provide, or is redundant to existing private services. This violates the 'improvement' requirement.",
+    "citation": "Municipal Property Rates Act (MPRA) s22(2)(a)(ii): Requires proposed improvement or upgrading. Constitution s152 & s153: Basic municipal service delivery obligations."
+  },
+  {
+    "id": "m3",
+    "statement": "I believe my personal information was abused, shared, or left exposed.",
+    "publicCategory": "Unfit Leadership & Misconduct",
+    "legalCategory": "III. UNFITNESS OF THE APPLICANT & POPIA VIOLATIONS",
+    "legalGround": "The unlawful processing and disclosure of personal data without consent constitutes a serious breach of national privacy law and a potential criminal offense.",
+    "citation": "Protection of Personal Information Act (POPIA) s9-12, s19 & s69."
+  }
+  /* ADD ALL CSV ROWS HERE — the full CSV must be converted to JSON and pasted in this array */
+];
+
+/* ---------- End mapping ---------- */
+
+/* App state */
+const state = {
+  step: 1,
+  totalSteps: 4,
+  name: '',
+  address: '',
+  erf: '',
+  email: '',
+  phone: '',
+  selected: new Set(),
+  personal: ''
+};
+
+function setProgress(){
+  const pct = Math.round(((state.step - 1) / (state.totalSteps - 1)) * 100);
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('stepCounter').textContent = `Step ${state.step} of ${state.totalSteps}`;
+  const titles = ['Step 1 — Your Property','Step 2 — Choose issues','Step 3 — Personal statement','Step 4 — Review & generate'];
+  document.getElementById('stepTitle').textContent = titles[state.step-1];
+}
+
+/* Save draft to localStorage */
+function saveDraft(){
+  state.name = document.getElementById('name').value || '';
+  state.address = document.getElementById('address').value || '';
+  state.erf = document.getElementById('erf').value || '';
+  state.email = document.getElementById('email').value || '';
+  state.phone = document.getElementById('phone').value || '';
+  state.personal = document.getElementById('personal') ? document.getElementById('personal').value : '';
+  const data = {
+    name: state.name, address: state.address, erf: state.erf, email: state.email, phone: state.phone, selected: Array.from(state.selected), personal: state.personal
+  };
+  localStorage.setItem('sraObjectionDraft', JSON.stringify(data));
+  alert('Draft saved locally in your browser.');
+}
+
+/* Load draft */
+function loadDraft(){
+  const raw = localStorage.getItem('sraObjectionDraft');
+  if(!raw) return;
+  try {
+    const d = JSON.parse(raw);
+    document.getElementById('name').value = d.name || '';
+    document.getElementById('address').value = d.address || '';
+    document.getElementById('erf').value = d.erf || '';
+    document.getElementById('email').value = d.email || '';
+    document.getElementById('phone').value = d.phone || '';
+    document.getElementById('personal').value = d.personal || '';
+    if(Array.isArray(d.selected)) d.selected.forEach(id => state.selected.add(id));
+    updatePreview();
+  } catch(e){}
+}
+
+/* Render accordion categories */
+function renderCategories(){
+  const categories = Array.from(new Set(mapping.map(i=>i.publicCategory)));
+  const el = document.getElementById('categories');
+  el.innerHTML = '';
+  categories.forEach(cat=>{
+    const container = document.createElement('div');
+    container.className = 'accordion card';
+    container.innerHTML = `
+      <div class="section-head" onclick="this.nextElementSibling.classList.toggle('open')">
+        <h3>${cat}</h3>
+        <div class="muted">Tap to expand</div>
+      </div>
+      <div class="section-content">
+        <div id="cat-${cat.replace(/[^a-z0-9]/gi,'_')}"></div>
+      </div>
+    `;
+    el.appendChild(container);
+    const listEl = container.querySelector('[id^=cat-]');
+    const items = mapping.filter(m=>m.publicCategory===cat);
+    items.forEach(item=>{
+      const id = item.id;
+      const box = document.createElement('label');
+      box.className = 'checkbox';
+      box.innerHTML = `
+        <input type="checkbox" id="cb-${id}" ${state.selected.has(id) ? 'checked' : ''} onchange="toggleItem('${id}')"/>
+        <div style="flex:1">
+          <div style="font-weight:600">${item.statement}</div>
+          <div class="muted">${item.legalCategory} — <span class="muted" style="font-weight:600">${item.citation.split('.')[0]}</span></div>
+        </div>
+      `;
+      listEl.appendChild(box);
+    });
+  });
+}
+
+/* Toggle selection */
+function toggleItem(id){
+  if(state.selected.has(id)) state.selected.delete(id); else state.selected.add(id);
+  updatePreview();
+}
+
+/* Build grouped preview */
+function buildGrouped(){
+  const selectedArr = mapping.filter(m=>state.selected.has(m.id));
+  if(selectedArr.length===0) return '<div class="muted">No items selected yet.</div>';
+  // group by legalCategory
+  const groups = {};
+  selectedArr.forEach(item=>{
+    if(!groups[item.legalCategory]) groups[item.legalCategory] = [];
+    groups[item.legalCategory].push(item);
+  });
+  let out='';
+  Object.keys(groups).forEach(cat=>{
+    out += `<div class="legal-header">${cat}</div>`;
+    groups[cat].forEach(item=>{
+      out += `<div style="margin-top:6px"><strong>•</strong> ${escapeHtml(item.legalGround)}<div class="citation">${escapeHtml(item.citation)}</div></div>`;
+    });
+  });
+  return out;
+}
+
+/* Escape HTML simple */
+function escapeHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* Update preview */
+function updatePreview(){
+  document.getElementById('livePreview').innerHTML = buildGrouped();
+}
+
+/* Steps navigation */
+function nextStep(){
+  if(state.step===1){
+    // gather identity
+    state.name = document.getElementById('name').value.trim();
+    state.address = document.getElementById('address').value.trim();
+    state.erf = document.getElementById('erf').value.trim();
+    state.email = document.getElementById('email').value.trim();
+    state.phone = document.getElementById('phone').value.trim();
+    if(!state.name || !state.erf){
+      if(!confirm('Name and Erf are recommended. Proceed even if missing?')) return;
+    }
+  }
+  if(state.step===2){
+    if(state.selected.size===0){
+      if(!confirm('You have not selected any objections. This will create a short personal objection only. Continue?')) return;
+    }
+  }
+  if(state.step<state.totalSteps) state.step++;
+  renderStep();
+}
+function prevStep(){
+  if(state.step>1) state.step--;
+  renderStep();
+}
+function renderStep(){
+  setProgress();
+  for(let i=1;i<=state.totalSteps;i++){
+    const el = document.getElementById('step-'+i);
+    if(!el) continue;
+    el.style.display = (i===state.step)?'block':'none';
+  }
+  if(state.step===2){
+    renderCategories();
+    updatePreview();
+  }
+  if(state.step===4){
+    state.personal = document.getElementById('personal').value || '';
+    document.getElementById('finalPreview').innerHTML = generateFinalObjectionHTML();
+  }
+}
+
+/* Generate full objection HTML */
+function generateFinalObjectionHTML(){
+  const header = `<div style="font-weight:700;font-size:1.05rem;margin-bottom:6px">Formal Objection to the Proposed Sandbaai SRA</div>
+  <div class="muted">Submitted by ${escapeHtml(state.name||'[Name not provided]')}${state.erf ? ' — Erf ' + escapeHtml(state.erf) : ''}${state.address ? ' — ' + escapeHtml(state.address) : ''}</div>
+  <div style="margin-top:8px"></div>`;
+  const grouped = buildGrouped();
+  const personal = state.personal ? `<div class="legal-header" style="margin-top:8px">Personal Statement</div><div style="margin-top:6px">${escapeHtml(state.personal)}</div>` : '';
+  const closing = `<div style="margin-top:12px">I request that the Municipality: (a) reject the SRA application or (b) require the applicant to re-run proper public participation and address the legal grounds cited above. Signed: ${escapeHtml(state.name||'')}</div>`;
+  return header + (grouped||'<div class="muted">No specific legal grounds selected.</div>') + personal + closing;
+}
+
+/* PDF generation using jsPDF */
+async function downloadPDF(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:'mm',format:'a4'});
+  const margin = 14;
+  const lineHeight = 6;
+  let y = margin;
+  doc.setFontSize(12);
+  doc.text('Formal Objection to the Proposed Sandbaai SRA', margin, y);
+  y += lineHeight;
+  doc.setFontSize(9);
+  const meta = `Submitted by ${state.name||'[Name]'}${state.erf ? ' — Erf ' + state.erf : ''}${state.address ? ' — ' + state.address : ''}`;
+  doc.text(meta, margin, y);
+  y += lineHeight;
+  doc.setFontSize(10);
+  const content = stripHtml(generateFinalObjectionHTML());
+  const split = doc.splitTextToSize(content, 180);
+  doc.text(split, margin, y);
+  // add footer
+  doc.setFontSize(8);
+  doc.text('Generated by Sandbaai SRA Objection Builder', margin, 285);
+  doc.save(`Sandbaai_SRA_Objection_${(state.erf||'submission').replace(/\s+/g,'_')}.pdf`);
+}
+
+/* Remove HTML tags */
+function stripHtml(html){
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  return tmp.textContent || tmp.innerText || '';
+}
+
+/* Open email prefill */
+function openEmail(){
+  const municipalityEmail = 'municipality@example.gov.za'; // EDIT before production
+  const subject = encodeURIComponent('Formal Objection — Sandbaai SRA');
+  const body = encodeURIComponent(stripHtml(generateFinalObjectionHTML()));
+  const mailto = `mailto:${municipalityEmail}?subject=${subject}&body=${body}`;
+  window.location.href = mailto;
+}
+
+/* Initialize */
+function init(){
+  setProgress();
+  loadDraft();
+  renderCategories();
+  updatePreview();
+}
+init();
+</script>
+</body>
+</html>
