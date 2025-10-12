@@ -57,7 +57,8 @@
     .row{flex-direction:column}
     header{flex-direction:column;text-align:center}
   }
-  footer{margin-top:18px;text-align:center;color:var(--muted);font-size:0.9rem}
+  footer{margin-top:18px;text-align:center;color:var(--muted);font-size:0.9rem;font-style:italic}
+  .urgent{color:#dc3545;font-weight:700}
 </style>
 </head>
 <body>
@@ -86,10 +87,17 @@
 
       <!-- Step 1: Identity -->
       <div id="step-1" class="step">
-        <label for="name" class="required">Full name</label>
-        <input id="name" placeholder="Your full name (owner or representative)" required />
-        
-        <div class="row" style="margin-top:8px">
+        <div class="row">
+          <div style="flex:2">
+            <label for="name" class="required">Full name</label>
+            <input id="name" placeholder="Your full name (owner or representative)" required />
+          </div>
+          <div style="flex:1">
+            <label for="idNumber">ID Number (optional)</label>
+            <input id="idNumber" placeholder="e.g., 8001015009087" />
+          </div>
+        </div>
+        <div class="note" style="margin-top:4px">If ID number is left blank, you'll need to add it manually when submitting to the municipality.</div>
           <div>
             <label for="address">Property address (optional)</label>
             <input id="address" placeholder="Street, Erf or complex name" />
@@ -100,11 +108,7 @@
           </div>
         </div>
         
-        <div style="margin-top:8px">
-          <label for="idNumber">ID Number (optional)</label>
-          <input id="idNumber" placeholder="e.g., 8001015009087" />
-          <div class="note">If left blank, you'll need to add your ID number manually when submitting to the municipality.</div>
-        </div>
+        <div class="note" style="margin-top:4px">If ID number is left blank, you'll need to add it manually when submitting to the municipality.</div>
         
         <div class="row" style="margin-top:8px">
           <div>
@@ -127,11 +131,11 @@
       <div id="step-2" class="step" style="display:none">
         <div style="display:flex;gap:12px;flex-wrap:wrap">
           <div style="flex:1;min-width:280px">
-            <label>Select your objections</label>
+            <label><span class="urgent">!! SELECT YOUR OBJECTIONS !!</span></label>
             <div id="categories"></div>
           </div>
           <div style="width:44%;min-width:240px">
-            <label>Live Preview (<span id="selectionCount">0</span> selected)</label>
+            <label>Selected Objections (<span id="selectionCount">0</span>)</label>
             <div class="preview" id="livePreview">No items selected yet.</div>
           </div>
         </div>
@@ -199,10 +203,18 @@ function scrollToRevoke(){
   state.step = 2;
   renderStep();
   setTimeout(() => {
+    const catId = 'cat-1';
+    const content = document.getElementById(catId);
+    const head = content.previousElementSibling;
+    content.classList.add('open');
+    head.classList.add('open');
+    
     const revokeCheckbox = document.getElementById('cb-prob_26');
     if(revokeCheckbox){
       revokeCheckbox.scrollIntoView({behavior:'smooth',block:'center'});
-      revokeCheckbox.parentElement.style.animation = 'pulse 1s ease-in-out 3';
+      setTimeout(() => {
+        revokeCheckbox.parentElement.style.animation = 'pulse 1s ease-in-out 3';
+      }, 300);
     }
   }, 300);
 }
@@ -290,6 +302,15 @@ function renderCategories(){
     const catData = objectionData.find(c => c.category === catName);
     if(!catData) return;
     
+    let sortedQuestions = [...catData.questions];
+    if(catName === "Problems with My Vote & Consent"){
+      sortedQuestions.sort((a, b) => {
+        if(a.isRevoke) return -1;
+        if(b.isRevoke) return 1;
+        return 0;
+      });
+    }
+    
     const container = document.createElement('div');
     container.className = 'accordion';
     const catId = 'cat-' + catIndex;
@@ -305,7 +326,7 @@ function renderCategories(){
     el.appendChild(container);
     
     const listEl = container.querySelector(`#${catId}-items`);
-    catData.questions.forEach(item=>{
+    sortedQuestions.forEach(item=>{
       const id = item.id;
       const box = document.createElement('label');
       box.className = 'checkbox';
@@ -319,13 +340,6 @@ function renderCategories(){
       `;
       listEl.appendChild(box);
     });
-    
-    if(catName === "Problems with My Vote & Consent"){
-      const revokeLink = document.createElement('div');
-      revokeLink.style.cssText = 'margin-top:10px;padding:10px;background:#fff3cd;border-radius:6px;text-align:center';
-      revokeLink.innerHTML = '<strong>Want to revoke your consent?</strong> <a href="#" onclick="scrollToRevokeInCategory();return false;" style="color:#125b7a;font-weight:700">Click here</a>';
-      listEl.appendChild(revokeLink);
-    }
   });
 }
 
@@ -362,21 +376,11 @@ function buildGrouped(){
   const selectedArr = allQuestions.filter(m=>state.selected.has(m.id));
   if(selectedArr.length===0) return '<div class="muted">No items selected yet.</div>';
   
-  const groups = {};
-  selectedArr.forEach(item=>{
-    if(!groups[item.legalCategory]) groups[item.legalCategory] = {order: item.order, items: []};
-    groups[item.legalCategory].items.push(item);
+  let out = '';
+  selectedArr.forEach((item, idx) => {
+    out += `<div style="margin-bottom:8px"><strong>${idx+1}.</strong> ${escapeHtml(item.statement)}</div>`;
   });
   
-  const sortedCategories = Object.keys(groups).sort((a,b) => groups[a].order - groups[b].order);
-  
-  let out='';
-  sortedCategories.forEach(cat=>{
-    out += `<div class="legal-header">${escapeHtml(cat)}</div>`;
-    groups[cat].items.forEach(item=>{
-      out += `<div style="margin-top:6px"><strong>•</strong> ${escapeHtml(item.legalGround)}<div class="citation">${escapeHtml(item.legalCitation)}</div></div>`;
-    });
-  });
   return out;
 }
 
@@ -463,6 +467,8 @@ function generateFinalObjectionHTML(){
     revokeSection = `<div style="margin-top:14px;padding:12px;background:#fff3cd;border:2px solid #ffc107;border-radius:6px">
       <div style="font-weight:700;font-size:1.05rem;margin-bottom:6px">FORMAL REVOCATION OF CONSENT</div>
       <div>I, ${escapeHtml(state.name)}, hereby formally and irrevocably REVOKE any consent I may have previously given for the establishment of the Sandbaai Special Rating Area (SRA). This revocation is exercised in accordance with my legal right to withdraw consent at any time prior to final determination of the SRA application.</div>
+      <div style="margin-top:8px;font-weight:600">IMPORTANT NOTICE:</div>
+      <div style="margin-top:4px">This revocation of consent is unconditional and stands independently of any objections raised in this submission. The withdrawal of consent is a separate legal right and is NOT contingent upon the acceptance, validity, or outcome of any objections submitted herein. This revocation must be recorded and processed regardless of any other matters raised in this document.</div>
       <div style="margin-top:6px;font-style:italic">Legal Basis: Municipal Property Rates Act (MPRA) s22(2)(b) expressly requires the consent of the majority of property owners, and consent remains revocable until the SRA is finally determined by the Municipality.</div>
     </div>`;
   }
@@ -487,8 +493,12 @@ function generateFinalObjectionHTML(){
   const closing = `<div style="margin-top:14px;padding-top:10px;border-top:1px solid #e6edf2">
     <div style="font-weight:700;margin-bottom:6px">REQUEST FOR ACTION:</div>
     <div>I respectfully request that Overstrand Municipality:</div>
-    <div style="margin-top:6px">(a) REJECT the Sandbaai SRA application in its entirety; OR</div>
-    <div>(b) REQUIRE the applicant to conduct a new, lawful public participation process that addresses all legal grounds cited above.</div>
+    <div style="margin-top:6px">(a) REJECT the Sandbaai SRA application in its entirety; AND</div>
+    <div>(b) REQUIRE a complete restart of the SRA establishment process, including:</div>
+    <div style="margin-left:20px;margin-top:4px">• A new, independent Urban Perception Survey conducted in accordance with proper methodology;</div>
+    <div style="margin-left:20px">• Restart of all voting from zero with proper safeguards and verification;</div>
+    <div style="margin-left:20px">• Full compliance with all legal requirements for notice, consultation, and public participation;</div>
+    <div style="margin-left:20px">• Complete transparency regarding all costs, plans, and governance structures.</div>
     <div style="margin-top:10px"><strong>Signed:</strong> ${escapeHtml(state.name||'[Name]')}</div>
   </div>`;
   
@@ -514,6 +524,8 @@ function generatePlainTextEmail(){
     text += `FORMAL REVOCATION OF CONSENT\n`;
     text += `${'='.repeat(60)}\n\n`;
     text += `I, ${state.name}, hereby formally and irrevocably REVOKE any consent I may have previously given for the establishment of the Sandbaai Special Rating Area (SRA). This revocation is exercised in accordance with my legal right to withdraw consent at any time prior to final determination of the SRA application.\n\n`;
+    text += `IMPORTANT NOTICE:\n`;
+    text += `This revocation of consent is unconditional and stands independently of any objections raised in this submission. The withdrawal of consent is a separate legal right and is NOT contingent upon the acceptance, validity, or outcome of any objections submitted herein. This revocation must be recorded and processed regardless of any other matters raised in this document.\n\n`;
     text += `Legal Basis: Municipal Property Rates Act (MPRA) s22(2)(b) expressly requires the consent of the majority of property owners, and consent remains revocable until the SRA is finally determined by the Municipality.\n`;
   }
   
@@ -548,8 +560,12 @@ function generatePlainTextEmail(){
   
   text += `\n\nREQUEST FOR ACTION:\n${'='.repeat(60)}\n`;
   text += `I respectfully request that Overstrand Municipality:\n\n`;
-  text += `(a) REJECT the Sandbaai SRA application in its entirety; OR\n`;
-  text += `(b) REQUIRE the applicant to conduct a new, lawful public participation process that addresses all legal grounds cited above.\n\n`;
+  text += `(a) REJECT the Sandbaai SRA application in its entirety; AND\n\n`;
+  text += `(b) REQUIRE a complete restart of the SRA establishment process, including:\n`;
+  text += `    • A new, independent Urban Perception Survey conducted in accordance with proper methodology;\n`;
+  text += `    • Restart of all voting from zero with proper safeguards and verification;\n`;
+  text += `    • Full compliance with all legal requirements for notice, consultation, and public participation;\n`;
+  text += `    • Complete transparency regarding all costs, plans, and governance structures.\n\n`;
   text += `Signed: ${state.name||'[Name]'}\n`;
   
   return text;
@@ -618,13 +634,20 @@ async function downloadPDF(){
 }
 
 function openEmail(){
-  const toEmails = 'CFO@overstrand.gov.za;dlouw@overstrand.gov.za';
-  const ccEmails = 'mm@overstrand.gov.za;mayor@overstrand.gov.za';
+  const toEmails = 'CFO@overstrand.gov.za, dlouw@overstrand.gov.za';
+  const ccEmails = 'mm@overstrand.gov.za, mayor@overstrand.gov.za';
   const bccEmails = 'ilovesandbaai@gmail.com';
   const subject = encodeURIComponent('Formal Objection – Sandbaai SRA Application');
   const body = encodeURIComponent(generatePlainTextEmail());
+  
   const mailto = `mailto:${toEmails}?cc=${ccEmails}&bcc=${bccEmails}&subject=${subject}&body=${body}`;
-  window.open(mailto);
+  
+  const tempLink = document.createElement('a');
+  tempLink.href = mailto;
+  tempLink.style.display = 'none';
+  document.body.appendChild(tempLink);
+  tempLink.click();
+  document.body.removeChild(tempLink);
 }
 
 function init(){
