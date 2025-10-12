@@ -429,7 +429,7 @@ function updatePreview(){
 }
 function copyObjectionText(){
   const text = stripHtml(generateFinalObjectionHTML()) +
-    "\n\nPlease confirm in writing that my ‘No’ consent or revocation has been faithfully recorded in the official municipal register.";
+    "\n\nPlease confirm receipt of this email.";
   navigator.clipboard.writeText(text).then(()=>{
     alert('Objection text copied to clipboard.');
   });
