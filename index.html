@@ -427,12 +427,23 @@ function updatePreview(){
   document.getElementById('livePreview').innerHTML = buildGrouped();
   document.getElementById('selectionCount').textContent = state.selected.size;
 }
-function copyObjectionText(){
-  const text = stripHtml(generateFinalObjectionHTML()) +
-    "\n\nPlease confirm receipt of this email.";
-  navigator.clipboard.writeText(text).then(()=>{
-    alert('Objection text copied to clipboard.');
-  });
+function copyObjectionText() {
+  try {
+    const verifyNote =
+      "\n\nPlease confirm in writing that my ‘No’ consent or revocation has been faithfully recorded in the official municipal register.";
+    const raw = generatePlainTextEmail() + verifyNote;
+
+    const formatted = raw
+      .replace(/\n{2,}/g, "\n\n")
+      .replace(/-{10,}/g, "----------------------------------------")
+      .replace(/={10,}/g, "========================================");
+
+    navigator.clipboard.writeText(formatted);
+    alert("✅ Objection text copied to clipboard.");
+  } catch (err) {
+    alert("⚠️ Copy failed. Please try again or copy manually.");
+    console.error(err);
+  }
 }
 // Utility: remove HTML tags for plaintext email / clipboard
 function stripHtml(html){
