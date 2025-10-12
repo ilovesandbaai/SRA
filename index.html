@@ -131,7 +131,7 @@
       <div id="step-2" class="step" style="display:none">
         <div style="display:flex;gap:12px;flex-wrap:wrap">
           <div style="flex:1;min-width:280px">
-            <label><span class="urgent">!! SELECT YOUR OBJECTIONS !!</span></label>
+            <label style="font-size:1.1rem">SELECT YOUR OBJECTIONS</label>
             <div id="categories"></div>
           </div>
           <div style="width:44%;min-width:240px">
@@ -164,6 +164,10 @@
           <strong>Tip:</strong> You can copy the text below and paste it directly into your email client if you prefer.
         </div>
         
+        <div style="color:#dc3545;font-style:italic;margin-bottom:10px;font-size:0.95rem">
+          <strong>Important:</strong> You are encouraged to attach any evidence (photos, documents, screenshots) of violations to your email submission to strengthen your objection.
+        </div>
+        
         <label>Review your objection</label>
         <div id="finalPreview" class="preview"></div>
         
@@ -176,7 +180,7 @@
     </div>
 
     <footer>
-      <div class="muted">This form does not store or share your data.</div>
+      <div class="muted"><span class="urgent">!!</span> This form does not store or share your data. <span class="urgent">!!</span></div>
     </footer>
   </div>
 
@@ -452,13 +456,15 @@ function generateFinalObjectionHTML(){
   const allQuestions = objectionData.flatMap(c => c.questions);
   const selectedArr = allQuestions.filter(m=>state.selected.has(m.id));
   
+  const fullAddress = state.address ? `${state.address}, Sandbaai, Hermanus 7200` : 'Sandbaai, Hermanus 7200';
+  
   let header = `<div style="font-weight:700;font-size:1.1rem;margin-bottom:8px">FORMAL OBJECTION TO THE PROPOSED SANDBAAI SRA</div>`;
   header += `<div style="margin-top:8px"><strong>Date:</strong> ${today}</div>`;
   header += `<div><strong>Name:</strong> ${escapeHtml(state.name||'[Name not provided]')}</div>`;
   if(state.idNumber) header += `<div><strong>ID Number:</strong> ${escapeHtml(state.idNumber)}</div>`;
   else header += `<div><strong>ID Number:</strong> ***ENTER YOUR ID NUMBER***</div>`;
   if(state.erf) header += `<div><strong>Erf/Stand:</strong> ${escapeHtml(state.erf)}</div>`;
-  if(state.address) header += `<div><strong>Address:</strong> ${escapeHtml(state.address)}</div>`;
+  header += `<div><strong>Address:</strong> ${escapeHtml(fullAddress)}</div>`;
   if(state.email) header += `<div><strong>Email:</strong> ${escapeHtml(state.email)}</div>`;
   if(state.phone) header += `<div><strong>Phone:</strong> ${escapeHtml(state.phone)}</div>`;
   
@@ -510,12 +516,14 @@ function generatePlainTextEmail(){
   const allQuestions = objectionData.flatMap(c => c.questions);
   const selectedArr = allQuestions.filter(m=>state.selected.has(m.id));
   
+  const fullAddress = state.address ? `${state.address}, Sandbaai, Hermanus 7200` : 'Sandbaai, Hermanus 7200';
+  
   let text = `FORMAL OBJECTION TO THE PROPOSED SANDBAAI SRA\n\n`;
   text += `Date: ${today}\n`;
   text += `Name: ${state.name||'[Name not provided]'}\n`;
   text += `ID Number: ${state.idNumber || '***ENTER YOUR ID NUMBER***'}\n`;
   if(state.erf) text += `Erf/Stand: ${state.erf}\n`;
-  if(state.address) text += `Address: ${state.address}\n`;
+  text += `Address: ${fullAddress}\n`;
   if(state.email) text += `Email: ${state.email}\n`;
   if(state.phone) text += `Phone: ${state.phone}\n`;
   
@@ -595,6 +603,8 @@ async function downloadPDF(){
   doc.setFontSize(10);
   doc.setFont(undefined, 'normal');
   const today = new Date().toLocaleDateString('en-ZA', {year:'numeric', month:'long', day:'numeric'});
+  const fullAddress = state.address ? `${state.address}, Sandbaai, Hermanus 7200` : 'Sandbaai, Hermanus 7200';
+  
   doc.text('Date: ' + today, margin, y);
   y += lineHeight;
   doc.text('Name: ' + (state.name||'[Name]'), margin, y);
@@ -602,18 +612,19 @@ async function downloadPDF(){
   doc.text('ID Number: ' + (state.idNumber ? state.idNumber : '_______________________________'), margin, y);
   y += lineHeight;
   if(state.erf){ doc.text('Erf/Stand: ' + state.erf, margin, y); y += lineHeight; }
-  if(state.address){ 
-    const addrLines = doc.splitTextToSize('Address: ' + state.address, maxWidth);
-    doc.text(addrLines, margin, y);
-    y += lineHeight * addrLines.length;
-  }
+  const addrLines = doc.splitTextToSize('Address: ' + fullAddress, maxWidth);
+  doc.text(addrLines, margin, y);
+  y += lineHeight * addrLines.length;
   if(state.email){ doc.text('Email: ' + state.email, margin, y); y += lineHeight; }
   if(state.phone){ doc.text('Phone: ' + state.phone, margin, y); y += lineHeight; }
   
   y += 4;
   
   const plainText = generatePlainTextEmail();
-  const lines = doc.splitTextToSize(plainText, maxWidth);
+  const startIndex = plainText.indexOf('\n\n') + 2;
+  const contentAfterHeader = plainText.substring(startIndex);
+  
+  const lines = doc.splitTextToSize(contentAfterHeader, maxWidth);
   
   lines.forEach(line => {
     checkPageBreak(lineHeight);
